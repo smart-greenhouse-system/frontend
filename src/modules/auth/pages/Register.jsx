@@ -1,0 +1,109 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import Button from "../../../components/ui/Button";
+import Input from "../../../components/ui/Input";
+
+const Register = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrors({
+        confirmPassword: "Las contraseñas no coinciden.",
+      });
+      console.log("Registro: contraseñas no coinciden");
+      return;
+    }
+
+    console.log("Registro: contraseñas coinciden", formData);
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-10">
+      <div className="w-full max-w-3xl rounded-2xl bg-white shadow-lg">
+        <div className="rounded-t-2xl bg-farm-green-dark px-8 py-6 text-white">
+          <h1 className="text-3xl font-semibold">Crear cuenta</h1>
+          <p className="mt-1 text-sm text-farm-green-light/90">
+            Registra tu usuario para acceder al sistema Smart GreenHouse.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5 px-8 py-8">
+          <Input
+            id="name"
+            name="name"
+            label="Nombre"
+            type="text"
+            autoComplete="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Tu nombre completo"
+            required
+          />
+
+          <Input
+            id="email"
+            name="email"
+            label="Correo"
+            type="email"
+            autoComplete="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="correo@ejemplo.com"
+            required
+          />
+
+          <Input
+            id="password"
+            name="password"
+            label="Contraseña"
+            type="password"
+            autoComplete="new-password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="********"
+            required
+          />
+
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            label="Confirmar contraseña"
+            type="password"
+            autoComplete="new-password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="********"
+            error={errors.confirmPassword}
+            required
+          />
+
+          <Button type="submit">Registrarse</Button>
+
+          <p className="text-center text-sm text-gray-700">
+            ¿Ya tienes cuenta?{" "}
+            <Link to="/login" className="font-medium text-farm-green hover:underline">
+              Inicia sesión
+            </Link>
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
