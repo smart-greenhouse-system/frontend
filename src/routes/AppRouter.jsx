@@ -10,6 +10,7 @@ import ResourceConsumption from "../modules/inventory/pages/ResourceConsumption"
 import Reports from "../modules/inventory/pages/Reports";
 import DashboardLayout from "../modules/layout/DashboardLayout";
 import MonitoreoIoT from "../modules/monitoreo/MonitoreoIoT";
+import Control from "../modules/control/Control";
 
 const AppRouter = () => {
   return (
@@ -29,6 +30,7 @@ const AppRouter = () => {
           <Route path="/inventory/consumption" element={<ResourceConsumption />} />
           <Route path="/inventory/reports" element={<Reports />} />
           <Route path="/monitoreo" element={<MonitoreoIoT />} />
+          <Route path="/control" element={<Control />} />
         </Route>
 
         {/* Redirección por defecto */}
