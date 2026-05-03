@@ -9,6 +9,7 @@ import CropHistory from "../modules/inventory/pages/CropHistory";
 import ResourceConsumption from "../modules/inventory/pages/ResourceConsumption";
 import Reports from "../modules/inventory/pages/Reports";
 import DashboardLayout from "../modules/layout/DashboardLayout";
+import MonitoreoIoT from "../modules/monitoreo/MonitoreoIoT";
 
 const AppRouter = () => {
   return (
@@ -27,6 +28,7 @@ const AppRouter = () => {
           <Route path="/inventory/history" element={<CropHistory />} />
           <Route path="/inventory/consumption" element={<ResourceConsumption />} />
           <Route path="/inventory/reports" element={<Reports />} />
+          <Route path="/monitoreo" element={<MonitoreoIoT />} />
         </Route>
 
         {/* Redirección por defecto */}
