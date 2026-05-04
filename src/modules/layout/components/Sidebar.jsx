@@ -11,10 +11,16 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  Activity,
+  SlidersHorizontal,
+  Bell,
 } from "lucide-react";
 
 const mainLinks = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/monitoreo", label: "Monitoreo IoT", icon: Activity },
+  { to: "/control", label: "Control", icon: SlidersHorizontal },
+  { to: "/alertas", label: "Alertas", icon: Bell },
   { to: "/inventory", label: "Inventario", icon: Boxes },
   { to: "/inventory/history", label: "Histórico", icon: History },
   { to: "/inventory/consumption", label: "Consumo", icon: Droplet },
