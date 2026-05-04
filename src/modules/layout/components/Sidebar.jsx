@@ -11,11 +11,17 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  ClipboardList,
+  Bell,
+  CalendarDays,
 } from "lucide-react";
 
 const mainLinks = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/alerts", label: "Alertas", icon: Bell },
   { to: "/inventory", label: "Inventario", icon: Boxes },
+  { to: "/inventory/crops", label: "Cultivos", icon: ClipboardList },
+  { to: "/inventory/harvest-estimation", label: "Cosecha estimada", icon: CalendarDays },
   { to: "/inventory/history", label: "Histórico", icon: History },
   { to: "/inventory/consumption", label: "Consumo", icon: Droplet },
   { to: "/inventory/reports", label: "Reportes", icon: BarChart3 },
