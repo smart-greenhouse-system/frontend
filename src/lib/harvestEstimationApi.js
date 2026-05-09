@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+import { getApiBaseUrl } from "./cropApi.js";
 
 function authHeaders(token) {
   const h = { Accept: "application/json" };
@@ -15,8 +15,9 @@ export function getUserAuthToken() {
  * Sin API base configurada devuelve null para que la vista use datos demo.
  */
 export async function fetchHarvestEstimation(cropId, token) {
-  if (!API_BASE || !cropId) return null;
-  const res = await fetch(`${API_BASE}/api/v1/crops/${encodeURIComponent(cropId)}/harvest-estimation`, {
+  const base = getApiBaseUrl();
+  if (!base || !cropId) return null;
+  const res = await fetch(`${base}/api/v1/crops/${encodeURIComponent(cropId)}/harvest-estimation`, {
     headers: authHeaders(token),
   });
   const text = await res.text();

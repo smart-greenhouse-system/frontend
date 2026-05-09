@@ -4,7 +4,7 @@ Este documento es la referencia central para el desarrollo. Contiene la divisió
 
 ## REQUERIMIENTOS
 
-### MO1- AUTENTICACIÓN (Santiago)
+## MO1- AUTENTICACIÓN (Santiago)
 
 # RF-01 - Registro de Usuario con Verificación por Correo Electrónico
 
@@ -213,7 +213,7 @@ Este documento es la referencia central para el desarrollo. Contiene la divisió
   - Sin filtros activos, la tabla muestra los registros más recientes por defecto
 
 
-### MO2- MONITOREO IOT(Majo)
+## MO2- MONITOREO IOT(Majo)
 
 # RF-08 - Environmental Variable Measurement
 
@@ -515,7 +515,7 @@ EVENT: sensor_update
 - Alta latencia → ajustar tasa de refresco o mostrar indicador de carga
 - Solo lecturas **válidas** (RF-14) deben alimentar el dashboard
 
-### MO3- CONTROL(Majo)
+## MO3- CONTROL(Majo)
 
 # RF-16 - Activación y Desactivación de Actuadores
 
@@ -866,7 +866,7 @@ POST /api/v1/threshold-rules
 - Solo usuarios con rol administrador u operador pueden crear o modificar umbrales.
 - Si la variable no tiene sensor activo asociado, la regla se guarda pero el sistema debe advertirlo.
 
-### MO4- CULTIVOS(Tamayo)
+## MO4- CULTIVOS(Tamayo)
 
 # RF-23 - Generación y Gestión de Alertas
 
@@ -1100,7 +1100,7 @@ POST /api/v1/crops/{crop_id}/harvest
 - La operación solo puede ejecutarse si el cultivo está activo (no cosechado); si ya tiene estado `"harvested"` el backend retorna `CROP_ALREADY_HARVESTED`.
 - Al registrar exitosamente, la fecha estimada de RF-26 queda reemplazada por la fecha real y el estado del cultivo pasa a `"harvested"` de forma permanente.
 
-### MO5- INVENTARIO(Santiago)
+## MO5- INVENTARIO(Santiago)
 
 # RF-28 - Crop History Management
 
@@ -1282,7 +1282,7 @@ GET /api/v1/reports?type={report_type}&from={YYYY-MM-DD}&to={YYYY-MM-DD}
 - La exportación es opcional y debe soportar al menos un formato descargable (CSV o PDF).
 - Los tipos de reporte soportados deben estar documentados como enum en el backend: `consumption`, `environment`, `actuators`, `crops`.
 
-### MO6- ALERTAS Y REPORTES(Majo)
+## MO6- ALERTAS Y REPORTES(Majo)
 
 # RF-32 - Threshold-Based Alerts
 
@@ -1458,8 +1458,8 @@ RESPONSE 200:
 - Si la data es parcial, generar reporte con advertencia visible indicando el período sin datos
 - Los filtros de fecha son obligatorios; greenhouse y crop son opcionales
 
-### MO7- INTELIGENCIA ARTIFICIAL(Tamayo)
-### MO8- DASHBOARD Y UX(Santiago)
+## MO7- INTELIGENCIA ARTIFICIAL(Tamayo)
+## MO8- DASHBOARD Y UX(Santiago)
 
 ## 🔌 4. CONTRATO DE DATOS (API CONTRACTS)
 

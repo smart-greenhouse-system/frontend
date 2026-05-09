@@ -8,7 +8,7 @@
 
 **Smart Greenhouse** es el panel web para operadores de invernaderos inteligentes: monitoreo, inventario, consumo de recursos, histórico de cultivos y reportes, con una interfaz clara y **mobile-first** para uso en campo.
 
-La especificación funcional y los contratos de API viven en **`FRONTEND_MASTER_PLAN.md`** (fuente de verdad del proyecto).
+La especificación funcional y los contratos de API viven en **`FRONTEND_MASTER_PLAN.md`**.
 
 ---
 
@@ -58,46 +58,103 @@ Abre la URL que muestre la terminal (por defecto suele ser `http://localhost:517
 
 ---
 
+## Mapa de rutas (integración en `AppRouter`)
+
+Todas las rutas privadas comparten **`DashboardLayout`** (sidebar responsive, navegación móvil). Las públicas son pantallas de autenticación sin layout.
+
+### Rutas públicas (M01 — Autenticación)
+
+| Ruta | Descripción |
+| :--- | :--- |
+| `/login` | Inicio de sesión (JWT). |
+| `/register` | Registro de operador. |
+| `/forgot-password` | Solicitud de recuperación de contraseña. |
+| `/reset-password` | Restablecimiento de contraseña con token. |
+
+### Área privada — Dashboard e inventario (M05 / cultivos)
+
+| Ruta | Descripción |
+| :--- | :--- |
+| `/dashboard` | Home del panel: KPIs, resumen operativo y accesos rápidos al dominio del invernadero. |
+| `/inventory` | Listado principal de inventario (insumos y existencias). |
+| `/inventory/crops` | Gestión de cultivos: notas de operador, registro de cosecha y flujos asociados (RF-25 / RF-27). |
+| `/inventory/harvest-estimation` | **Módulo de IA — Cosecha estimada (RF-26):** tabla de cultivos activos (demo o enlazada a datos), detalle por cultivo, madurez, fuente de estimación (`source`) y acción **Actualizar estimación**; contratos ampliados de IA en `FRONTEND_MASTER_PLAN.md` (secciones C y D). |
+| `/inventory/consumption` | Consumo de recursos (agua, energía, insumos) por periodo o cultivo. |
+| `/inventory/history` | Histórico de cultivos y ciclos anteriores. |
+| `/inventory/reports` | Reportes exportables / vistas analíticas del inventario y producción. |
+
+### Área privada — IoT (M02 / M03) y alertas
+
+| Ruta | Descripción |
+| :--- | :--- |
+| `/monitoreo` | **M02 — Monitoreo IoT:** lecturas de sensores, tendencias y estado del invernadero (integración de UI; datos pueden provenir de mocks hasta conectar `GET /api/sensors/data` según plan). |
+| `/control` | **M03 — Control IoT:** acciones sobre actuadores (riego, ventilación, etc.); UI integrada (envío real según `POST /api/actuators/control` en el plan). |
+| `/alertas` | Alertas del sistema: listado filtrable, severidades y preferencias de notificación (RF-23 / RF-24, persistencia vía RF-34 en API). |
+
+---
+
 ## Estructura del proyecto (`src/`)
 
-El código de negocio está organizado por **módulos** bajo `src/modules/`, separando autenticación, layout del dashboard y dominio de inventario/reportes.
+El código está organizado por **módulos** bajo `src/modules/`, alineados con **MO1–MO8** del master plan.
 
-| Ruta | Contenido |
+| Ruta en disco | Contenido |
 | :--- | :--- |
-| **`src/modules/auth/`** | Páginas de **M01**: login, registro, recuperación y restablecimiento de contraseña |
-| **`src/modules/layout/`** | **M08**: `DashboardLayout`, `Sidebar`, `MobileNavbar` (responsive) |
-| **`src/modules/inventory/`** | **M05** y vistas relacionadas: inventario, consumo, histórico de cultivos, dashboard KPI, reportes |
-| **`src/routes/`** | `AppRouter.jsx`: definición de rutas públicas y privadas |
-| **`src/components/ui/`** | Kit de UI atómico (ver siguiente sección) |
+| **`src/modules/auth/`** | **M01:** login, registro, recuperación y restablecimiento de contraseña |
+| **`src/modules/monitoreo/`** | **M02:** vista de monitoreo IoT |
+| **`src/modules/control/`** | **M03:** panel de control de actuadores |
+| **`src/modules/inventory/`** | **M05:** inventario, consumo, histórico, reportes, cultivos y cosecha estimada |
+| **`src/modules/alertas/`** | Alertas y preferencias (RF-23 / RF-24) |
+| **`src/modules/layout/`** | **M08:** `DashboardLayout`, `Sidebar`, `MobileNavbar` |
+| **`src/routes/`** | `AppRouter.jsx`: rutas públicas y privadas |
+| **`src/lib/`** | Clientes HTTP por dominio (`alertsApi`, `cropApi`, `harvestEstimationApi`) |
+| **`src/components/ui/`** | Kit de UI atómico (siguiente sección) |
 
 ---
 
-## Kit de componentes UI
+## Kit de componentes UI (`src/components/ui/`)
 
-En **`src/components/ui/`** encontrarás piezas reutilizables para mantener consistencia visual:
+Piezas reutilizables para mantener consistencia visual y comportamiento en formularios y flujos modales.
 
-| Componente | Uso típico |
+| Componente | Descripción |
 | :--- | :--- |
-| **`Button.jsx`** | Botones primarios (verde `farm-green`) y variantes vía `className` |
-| **`Input.jsx`** | Campos con etiqueta, estados de error y focus accesible |
-| **`Modal.jsx`** | Diálogos (overlay, cierre por fuera o con **X**), ancho cómodo en móvil |
-
----
-
-## Responsabilidades — Santiago
-
-| Módulo | Alcance implementado |
-| :--- | :--- |
-| **M01 — Autenticación** | Flujos de login, registro y recuperación de contraseña (UI alineada al plan; integración API pendiente según roadmap) |
-| **M05 — Inventario** | Lista de insumos, modal de alta, consumo de recursos, histórico de cultivos, reportes; tablas con **card-stacking** en móvil |
-| **M08 — Layout** | Shell del dashboard: sidebar colapsable en escritorio, menú hamburguesa + overlay en móvil |
+| **`Button.jsx`** | Botón accesible con estilo primario (`farm-green-dark`), hover y anillo de foco; acepta `className` para variantes secundarias o ancho auto sin perder tokens del tema. |
+| **`Input.jsx`** | Campo de formulario con `label` opcional, soporte de `error` (borde y anillo rojo), estados de foco con anillo verde y tipografía legible en móvil. |
+| **`Modal.jsx`** | Diálogo modal (`role="dialog"`, `aria-modal`), overlay semitransparente, cierre al pulsar fuera o con icono **X** (Lucide), contenedor `max-w-2xl` y márgenes laterales para pantallas pequeñas. |
 
 ---
 
 ## Estado del proyecto
 
-- **Diseño 100% responsive (mobile-first):** navegación táctil, tablas adaptadas a tarjetas en pantallas pequeñas y modales usables en celular.
-- **Datos:** varias pantallas usan mocks locales para demostración; la conexión a la API real debe seguir el contrato en `FRONTEND_MASTER_PLAN.md`.
+| Módulo (plan) | Alcance en frontend | Responsive |
+| :--- | :--- | :--- |
+| **M01 — Autenticación** | Flujos de login, registro y contraseña bajo rutas públicas | 100% |
+| **M02 — Monitoreo IoT** | Vista `/monitoreo` integrada en el shell del dashboard | 100% |
+| **M03 — Control IoT** | Vista `/control` integrada | 100% |
+| **M05 — Inventario** | Inventario, consumo, histórico, reportes, cultivos y cosecha estimada | 100% |
+| **M08 — Dashboard y UX** | Layout compartido, sidebar y navegación móvil | 100% |
+
+- **Datos:** parte de las pantallas IoT y de demostración usan **mocks** locales; los endpoints reales deben respetar `FRONTEND_MASTER_PLAN.md`. La variable de entorno **`VITE_API_BASE_URL`** (sin barra final) es la base usada por `src/lib/*` para llamadas HTTP.
+
+---
+
+## API & Endpoints (IA)
+
+Contratos del **módulo IA** en `FRONTEND_MASTER_PLAN.md` (secciones C y D), coincidentes con el desglose funcional del equipo. La ruta **`/inventory/harvest-estimation`** cubre RF-26 y es el punto de entrada en UI para estimación de cosecha; el cliente **`fetchHarvestEstimation`** en `src/lib/harvestEstimationApi.js` consume el endpoint REST de estimación por cultivo.
+
+### Predicción ambiental y estado de planta
+
+| Método | Endpoint | Propósito | Cuerpo / respuesta (resumen) |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/ia/predictions` | Predicciones ambientales y avisos textuales | JSON con `predicciones` (p. ej. temperatura, humedad relativa), `alerta`, `timestamp` (ver plan). |
+| `GET` | `/api/ia/growth` | Estado de planta vía IA | JSON con `estado_planta` (p. ej. `saludable`, otros valores acordados con backend), `timestamp`. |
+
+### Estimación de cosecha (RF-26, cliente en `src/lib`)
+
+| Método | Endpoint | Cliente |
+| :--- | :--- | :--- |
+| `GET` | `/api/v1/crops/{crop_id}/harvest-estimation` | `fetchHarvestEstimation` en `harvestEstimationApi.js` |
+
+**Nota:** Las rutas `/api/ia/predictions` y `/api/ia/growth` están **especificadas en el master plan** como contrato de capa IA; en esta revisión **no** hay módulos dedicados en `src/lib/` que las encapsulen (la pantalla de cosecha estimada se apoya en el GET de harvest-estimation y datos demo cuando no hay backend). Para alertas, notas, cosecha y preferencias, ver `alertsApi.js` y `cropApi.js`.
 
 ---
 
