@@ -10,8 +10,10 @@ import ResourceConsumption from "../modules/inventory/pages/ResourceConsumption"
 import Reports from "../modules/inventory/pages/Reports";
 import CropManagement from "../modules/inventory/pages/CropManagement";
 import HarvestEstimation from "../modules/inventory/pages/HarvestEstimation";
-import AlertsPage from "../modules/alerts/pages/AlertsPage";
 import DashboardLayout from "../modules/layout/DashboardLayout";
+import MonitoreoIoT from "../modules/monitoreo/MonitoreoIoT";
+import Control from "../modules/control/Control";
+import Alertas from "../modules/alertas/Alertas";
 
 const AppRouter = () => {
   return (
@@ -26,13 +28,15 @@ const AppRouter = () => {
         {/* Rutas Privadas con Layout (M08) */}
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardHome />} />
-          <Route path="/alerts" element={<AlertsPage />} />
           <Route path="/inventory" element={<InventoryList />} />
+          <Route path="/inventory/crops" element={<CropManagement />} />
+          <Route path="/inventory/harvest-estimation" element={<HarvestEstimation />} />
           <Route path="/inventory/history" element={<CropHistory />} />
           <Route path="/inventory/consumption" element={<ResourceConsumption />} />
           <Route path="/inventory/reports" element={<Reports />} />
-          <Route path="/inventory/crops" element={<CropManagement />} />
-          <Route path="/inventory/harvest-estimation" element={<HarvestEstimation />} />
+          <Route path="/monitoreo" element={<MonitoreoIoT />} />
+          <Route path="/control" element={<Control />} />
+          <Route path="/alertas" element={<Alertas />} />
         </Route>
 
         {/* Redirección por defecto */}

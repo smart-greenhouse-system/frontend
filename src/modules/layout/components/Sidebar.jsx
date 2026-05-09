@@ -11,14 +11,18 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
-  ClipboardList,
+  Activity,
+  SlidersHorizontal,
   Bell,
+  ClipboardList,
   CalendarDays,
 } from "lucide-react";
 
 const mainLinks = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/alerts", label: "Alertas", icon: Bell },
+  { to: "/monitoreo", label: "Monitoreo IoT", icon: Activity },
+  { to: "/control", label: "Control", icon: SlidersHorizontal },
+  { to: "/alertas", label: "Alertas", icon: Bell },
   { to: "/inventory", label: "Inventario", icon: Boxes },
   { to: "/inventory/crops", label: "Cultivos", icon: ClipboardList },
   { to: "/inventory/harvest-estimation", label: "Cosecha estimada", icon: CalendarDays },
@@ -32,7 +36,7 @@ const secondaryLinks = [{ to: "/users", label: "Usuarios", icon: UsersRound }];
 const SidebarLink = ({ to, label, Icon, collapsed = false, onNavigate }) => (
   <NavLink
     to={to}
-    end={to === "/dashboard"}
+    end={to === "/dashboard" || to === "/inventory"}
     onClick={onNavigate}
     className={({ isActive }) =>
       [
