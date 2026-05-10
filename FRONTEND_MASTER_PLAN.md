@@ -6,29 +6,39 @@ Este documento es la referencia central para el desarrollo. Contiene la divisió
 
 ## MO1- AUTENTICACIÓN (Santiago)
 
-# RF-01 - Registro de Usuario con Verificación por Correo Electrónico
+# RF-01 - Registro de Usuario con Verificación por Correo Electrónico (ACTUALIZADO)
 
-- **Vista:** Tarjeta centrada sobre fondo gris claro con bordes redondeados y sombra ligera. Encabezado en verde oscuro (`Crear cuenta`), cuatro campos apilados (Nombre, Correo, Contraseña, Confirmar contraseña) de ancho completo, botón `Registrarse` en verde oscuro con texto blanco, y enlace `Inicia sesión` al pie en verde.
+    Vista: Tarjeta centrada sobre fondo gris claro con bordes redondeados y sombra ligera. Encabezado en verde oscuro (Crear cuenta), tres campos apilados (Correo, Contraseña, Confirmar contraseña) de ancho completo, botón Registrarse en verde oscuro con texto blanco, y enlace Inicia sesión al pie en verde.
 
-- **Acciones:**
-  - Completar los cuatro campos del formulario y presionar `Registrarse`
-  - Hacer clic en el enlace de verificación recibido por correo para activar la cuenta
-  - Hacer clic en `Inicia sesión` para navegar a la pantalla de autenticación
+    Acciones:
 
-- **API:**
-  - `POST /api/v1/auth/register`
-    - **Envío:** `{ "name": string, "email": string, "password": string }`
-    - **201:** `{ "message": "Verification email sent successfully" }`
-    - **400:** `{ "code": "EMAIL_ALREADY_EXISTS", "message": string }`
-    - **500:** `{ "code": "EMAIL_SERVICE_ERROR", "message": string }`
+        Completar los tres campos del formulario y presionar Registrarse.
 
-- **Reglas:**
-  - El correo electrónico debe ser único; si ya existe, mostrar error en línea bajo el campo de correo
-  - Las contraseñas deben coincidir; si no, mostrar error bajo el campo `Confirmar contraseña`
-  - La contraseña debe tener mínimo 8 caracteres
-  - La cuenta se crea en estado **pendiente** hasta que el usuario verifique el correo
-  - Si el token de verificación expira, el sistema debe solicitar un nuevo enlace
-  - El servicio de correo debe estar operativo; si falla, retornar `EMAIL_SERVICE_ERROR`
+        El sistema validará que la contraseña cumpla con los requisitos de seguridad antes de enviar.
+
+        Hacer clic en el enlace de verificación recibido por correo para activar la cuenta.
+
+        Hacer clic en Inicia sesión para navegar a la pantalla de autenticación.
+
+    API:
+
+        POST /api/auth/register
+
+            Envío: { "email": string, "password": string }
+
+            200 (Success): { "success": true, "message": "Usuario registrado correctamente" }
+
+            Error: { "success": false, "message": "ese email ya se encuentra en uso" }
+
+    Reglas:
+
+        El correo electrónico debe ser único.
+
+        Las contraseñas deben coincidir.
+
+        Requisitos de Contraseña (Backend): Mínimo 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.
+
+        El frontend debe validar estos requisitos antes de habilitar el botón de envío.
 
   # RF-02 - Authentication with JWT and Refresh Tokens
 
@@ -517,60 +527,39 @@ EVENT: sensor_update
 
 ## MO3- CONTROL(Majo)
 
-# RF-16 - Activación y Desactivación de Actuadores
+# RF-16 - Activación y Desactivación de Actuadores (ACTUALIZADO)
+Vista
 
-## Vista
-Pantalla centrada con fondo blanco. Encabezado verde oscuro + subtítulo gris. Cuerpo: fila de 3 tarjetas (una por actuador) con ícono centrado, nombre en negrita, etiqueta de estado con color semántico (verde = encendido, rojo/naranja = apagado) y dos botones lado a lado: `ON` (fondo verde oscuro, texto blanco) y `OFF` (fondo rojo, texto blanco). En error de timeout: mensaje sobre la tarjeta correspondiente.
+Pantalla centrada con fondo blanco. Encabezado verde oscuro + subtítulo gris. Cuerpo: fila de 3 tarjetas (una por actuador) con ícono centrado, nombre en negrita, etiqueta de estado (verde = encendido, rojo/naranja = apagado) y dos botones: ON y OFF.
+Acciones
 
-**Actuadores:**
-| Tarjeta | Ícono | Estados posibles |
-|---|---|---|
-| Bomba de riego | 💧 gota azul | Apagada / Encendida |
-| Ventilador | 🌀 ventilador | Apagado / Encendido |
-| Iluminación | 💡 bombilla amarilla | Apagada / Encendida |
+    Usuario presiona ON u OFF sobre un actuador.
 
-## Acciones
-- Usuario presiona `ON` u `OFF` sobre un actuador
-- Etiqueta de estado se actualiza en tiempo real al recibir confirmación MQTT
-- Si no hay confirmación → mensaje de timeout sobre la tarjeta, último estado confirmado se mantiene
+    El sistema envía la petición al backend y espera confirmación de éxito.
 
-## API
-```
-POST /api/v1/actuators/{actuator_id}/commands
-Authorization: Bearer <token-operator>
+API
 
-BODY:
-{ "command": "ON", "source": "manual" }
+    Endpoint: POST /api/actuadores
 
-RESPUESTAS:
-200 → comando enviado:
-  { "actuator_id": "...", "command": "ON", "status": "pending_confirmation" }
+    Body:
 
-200 → estado confirmado:
-  { "actuator_id": "...", "current_state": "ON", "confirmed_at": "ISO8601" }
+code JSON
 
-403 → { "code": "INSUFFICIENT_PERMISSIONS", "message": "..." }
-504 → { "code": "ACTUATOR_CONFIRMATION_TIMEOUT", "message": "..." }
-```
+{
+  "device_id": "string",
+  "actuador": "riego | ventilacion | iluminacion",
+  "accion": "ON | OFF"
+}
 
-## MQTT
-```
-COMANDO:
-  TOPIC:   greenhouse/{greenhouse_id}/actuator/{actuator_id}/command
-  PAYLOAD: { "command": "ON", "source": "manual", "requested_by": "user_001", "timestamp": "ISO8601" }
-  (source posibles: "manual", "automatic", "scheduled")
+    Response Success: { "success": true, "message": "Comando enviado correctamente" }
 
-CONFIRMACIÓN:
-  TOPIC:   greenhouse/{greenhouse_id}/actuator/{actuator_id}/status
-  PAYLOAD: { "actuator_id": "...", "state": "ON", "confirmed_at": "ISO8601" }
-```
+    Response Error: { "success": false, "message": "Error enviando comando" }
 
-## Reglas
-- Solo valores válidos para `command`: `"ON"` o `"OFF"`
-- Usuario debe tener permiso explícito para controlar actuadores → `403` si no
-- Actuador desconectado → bloquear comando, marcar como **no disponible**
-- Sin confirmación MQTT → `504 ACTUATOR_CONFIRMATION_TIMEOUT`, UI mantiene último estado confirmado
-- Estado UI se actualiza **solo tras confirmación del dispositivo**, no tras envío del comando
+Reglas
+
+    Los nombres de los actuadores y las acciones deben enviarse exactamente como indica el contrato del backend.
+
+    El estado en la UI solo debe cambiar si la respuesta del servidor es success: true.
 
 
 # RF-17 - Modo Automático Basado en Umbrales
@@ -623,49 +612,35 @@ RESPUESTAS:
 - Toda acción automática ejecutada se **registra en historial de actuadores**
 
 
-# RF-18 - Modo Manual Override
+# RF-18 - Modo Manual Override (ACTUALIZADO)
+Vista
 
-## Vista
-Panel de actuadores con encabezado verde oscuro centrado ("Modo manual (override)"). Tarjetas apiladas verticalmente, cada una con: nombre en negrita, etiqueta de modo con color semántico (naranja = `Manual activo`, verde = `Automático activo`) y botones `Encender` (verde oscuro) | `Apagar` (rojo). Cuando override está activo: mensaje de aviso en texto naranja centrado — *"El modo automático está pausado para este actuador"*.
+Panel de actuadores con encabezado verde oscuro centrado ("Modo manual (override)"). Tarjetas con nombre, etiqueta de modo (naranja = Manual activo, verde = Automático activo) y botones Encender | Apagar.
+Acciones
 
-## Acciones
-- Operador presiona `Encender` o `Apagar` → se activa override manual
-- Etiqueta cambia de verde (`Automático activo`) a naranja (`Manual activo`)
-- Aparece mensaje de aviso de pausa automática
-- Al expirar el override (o cancelarlo) → etiqueta vuelve a verde, reglas automáticas retoman
+    Operador presiona Encender o Apagar para forzar un estado manual.
 
-## API
-```
-POST /api/v1/actuators/{actuator_id}/manual-override
-Authorization: Bearer <token-operator>
+    Se envía la petición al mismo endpoint de actuadores generales para asegurar compatibilidad con el backend.
 
-BODY:
-{ "command": "ON", "override_duration_minutes": 10 }
+API
 
-RESPUESTAS:
-200 → { "actuator_id": "...", "mode": "manual", "expires_at": "ISO8601" }
-403 → { "code": "INSUFFICIENT_PERMISSIONS", "message": "..." }
-409 → { "code": "ACTUATOR_OFFLINE", "message": "..." }
-```
+    Endpoint: POST /api/actuadores
 
-## MQTT
-```
-TOPIC:   greenhouse/{greenhouse_id}/actuator/{actuator_id}/command
-PAYLOAD: {
-  "command": "ON",
-  "mode": "manual_override",
-  "override_duration_minutes": 10,
-  "timestamp": "ISO8601"
+    Body:
+
+code JSON
+
+{
+  "device_id": "string",
+  "actuador": "string",
+  "accion": "ON | OFF"
 }
-```
 
-## Reglas
-- Comando manual tiene **mayor prioridad** que reglas automáticas (RF-17)
-- Override pausa el control automático **solo para el actuador afectado**, no para todos
-- El override tiene duración configurable (`override_duration_minutes`); al expirar → modo automático se reactiva
-- Actuador offline → `409 ACTUATOR_OFFLINE`, comando rechazado
-- Sin confirmación MQTT → notificar al usuario (timeout, ver RF-16)
-- Usuario requiere permiso de control de actuadores → `403` si no lo tiene
+Reglas
+
+    Al activar el modo manual, el sistema debe informar al usuario que las reglas automáticas podrían ser ignoradas temporalmente.
+
+    Prioridad: El comando manual tiene precedencia sobre el estado actual del sensor.
 
 
 # RF-19 - Programación de Riego
@@ -1461,56 +1436,40 @@ RESPONSE 200:
 ## MO7- INTELIGENCIA ARTIFICIAL(Tamayo)
 ## MO8- DASHBOARD Y UX(Santiago)
 
-## 🔌 4. CONTRATO DE DATOS (API CONTRACTS)
+## 🔌 4. CONTRATO DE DATOS (API CONTRACTS) - ACTUALIZADO V2
 
-### A. MÓDULO IOT (Lectura de Sensores)
-- **Endpoint:** GET /api/sensors/data
-- **Campos:**
-  - device_id (string)
-  - temperatura (float)
-  - humedad_suelo (int)
-  - humedad_relativa (int)
-  - luz (int)
+### A. AUTENTICACIÓN
+- **Registro:** POST `/api/auth/register`
+  - Body: `{ "email": string, "password": (mín 8 carac, 1 Mayus, 1 Minus, 1 Num, 1 Esp) }`
+- **Login:** POST `/api/auth/login`
+  - Body: `{ "email": string, "password": string }`
+  - Response Success: `{ "token": string, "type": "Bearer", "expires_in": 3600 }`
+
+### B. DASHBOARD CONSOLIDADO (Persona 3)
+- **Endpoint:** GET `/api/dashboard`
+- **Uso:** Carga inicial del resumen general.
 - **JSON de ejemplo:**
   {
-    "device_id": "esp32_1",
-    "timestamp": "2026-04-22T10:00:00Z",
-    "temperatura": 25.5,
-    "humedad_suelo": 60,
-    "humedad_relativa": 40,
-    "luz": 300
+    "temperatura": 24.5,
+    "humedad_relativa": 65.4,
+    "humedad_suelo": 42.1,
+    "iluminacion": 780,
+    "estado_planta": "Anthesis",
+    "confianza": 0.934,
+    "tiempo_cosecha_dias": 35,
+    "timestamp": "ISO8601"
   }
 
-### B. MÓDULO IOT (Control de Actuadores)
-- **Endpoint:** POST /api/actuators/control
-- **Campos:**
-  - device_id (string)
-  - action (string: "activar_riego", etc)
-  - value (int: duración o intensidad)
-- **JSON de ejemplo:**
-  {
-    "device_id": "esp32_1",
-    "action": "activar_riego",
-    "value": 10
-  }
+### C. MÓDULO IOT (Persona 2)
+- **Lectura Sensores:** GET `/api/sensores`
+  - Response: Lista de nodos `[{ "device_id": string, ... }]`
+- **Control Actuadores:** POST `/api/actuadores`
+  - Body: `{ "device_id": string, "actuador": string, "accion": "ON" | "OFF" }`
 
-### C. MÓDULO IA (Predicciones)
-- **Endpoint:** GET /api/ia/predictions
-- **Campos:**
-  - predicciones (objeto: temperatura, humedad_relativa)
-  - alerta (string: mensaje de aviso)
-- **JSON de ejemplo:**
-  {
-    "timestamp": "2026-04-22T10:05:00Z",
-    "predicciones": { "temperatura": 28.0, "humedad_relativa": 35 },
-    "alerta": "Possible water stress in the coming hours"
-  }
+### D. MÓDULO IA (Persona 3)
+- **Análisis Detallado:** GET `/api/plant-analysis`
+  - Response: `{ "estado_planta": string, "confianza": float, "tiempo_cosecha_dias": int }`
 
-### D. MÓDULO IA (Estado de Planta)
-- **Endpoint:** GET /api/ia/growth
-- **Campo:** estado_planta (string: "saludable", "enferma", etc)
-- **JSON de ejemplo:**
-  {
-    "timestamp": "2026-04-22T10:10:00Z",
-    "estado_planta": "saludable"
-  }
+### E. HISTÓRICOS (Persona 1/2)
+- **Endpoint:** GET `/api/historicos`
+  - Response: Lista de lecturas históricas.
