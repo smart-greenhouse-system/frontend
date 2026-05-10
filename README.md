@@ -170,15 +170,6 @@ Actualmente, el sistema de autenticación y peticiones se encuentra en **Modo Mo
 
 > **Nota:** Al ingresar estas credenciales, el sistema generará un token JWT simulado y permitirá el acceso a todas las rutas protegidas.## 🚀 Desarrollo y Pruebas (Modo Mock)
 
-Actualmente, el sistema de autenticación y peticiones se encuentra en **Modo Mock**. Esto permite al equipo de desarrollo trabajar en sus módulos sin dependencia directa del Backend.
-
-### Credenciales de acceso de prueba:
-| Usuario | Contraseña | Rol |
-| :--- | :--- | :--- |
-| `admin@admin.com` | `Admin123*` | Administrador (Mock) |
-
-> **Nota:** Al ingresar estas credenciales, el sistema generará un token JWT simulado y permitirá el acceso a todas las rutas protegidas.
-
 ## 🛡️ Infraestructura y Seguridad
 
 Se ha implementado una arquitectura de datos robusta para asegurar la integridad de la información y la sesión del usuario:
