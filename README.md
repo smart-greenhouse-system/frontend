@@ -125,13 +125,13 @@ Piezas reutilizables para mantener consistencia visual y comportamiento en formu
 
 ## Estado del proyecto
 
-| Módulo (plan) | Alcance en frontend | Responsive |
+| Módulo (plan) | Alcance en frontend | Estado |
 | :--- | :--- | :--- |
-| **M01 — Autenticación** | Flujos de login, registro y contraseña bajo rutas públicas | 100% |
-| **M02 — Monitoreo IoT** | Vista `/monitoreo` integrada en el shell del dashboard | 100% |
-| **M03 — Control IoT** | Vista `/control` integrada | 100% |
-| **M05 — Inventario** | Inventario, consumo, histórico, reportes, cultivos y cosecha estimada | 100% |
-| **M08 — Dashboard y UX** | Layout compartido, sidebar y navegación móvil | 100% |
+| **M01 — Autenticación** | Login, Registro, Guards e Infraestructura JWT | 100% |
+| **M02 — Monitoreo IoT** | Vista de sensores integrada | UI Lista / Datos Mock |
+| **M03 — Control IoT** | Panel de actuadores integrado | UI Lista / Datos Mock |
+| **M05 — Inventario** | Inventario, Consumo, Histórico y Cosecha Estimada | 100% |
+| **M08 — Dashboard y UX** | Shell principal, Sidebar y Responsive | 100% |
 
 - **Datos:** parte de las pantallas IoT y de demostración usan **mocks** locales; los endpoints reales deben respetar `FRONTEND_MASTER_PLAN.md`. La variable de entorno **`VITE_API_BASE_URL`** (sin barra final) es la base usada por `src/lib/*` para llamadas HTTP.
 
@@ -158,6 +158,42 @@ Contratos del **módulo IA** en `FRONTEND_MASTER_PLAN.md` (secciones C y D), coi
 
 ---
 
+
+## 🚀 Desarrollo y Pruebas (Modo Mock)
+
+Actualmente, el sistema de autenticación y peticiones se encuentra en **Modo Mock**. Esto permite al equipo de desarrollo trabajar en sus módulos sin dependencia directa del Backend.
+
+### Credenciales de acceso de prueba:
+| Usuario | Contraseña | Rol |
+| :--- | :--- | :--- |
+| `admin@admin.com` | `Admin123*` | Administrador (Mock) |
+
+> **Nota:** Al ingresar estas credenciales, el sistema generará un token JWT simulado y permitirá el acceso a todas las rutas protegidas.## 🚀 Desarrollo y Pruebas (Modo Mock)
+
+Actualmente, el sistema de autenticación y peticiones se encuentra en **Modo Mock**. Esto permite al equipo de desarrollo trabajar en sus módulos sin dependencia directa del Backend.
+
+### Credenciales de acceso de prueba:
+| Usuario | Contraseña | Rol |
+| :--- | :--- | :--- |
+| `admin@admin.com` | `Admin123*` | Administrador (Mock) |
+
+> **Nota:** Al ingresar estas credenciales, el sistema generará un token JWT simulado y permitirá el acceso a todas las rutas protegidas.
+
+## 🛡️ Infraestructura y Seguridad
+
+Se ha implementado una arquitectura de datos robusta para asegurar la integridad de la información y la sesión del usuario:
+
+- **Cliente API (Axios):** Centralizado en `src/api/api.js`.
+  - **Interceptor de Petición:** Inyecta automáticamente el Token JWT en los headers (`Authorization: Bearer <token>`).
+  - **Interceptor de Respuesta:** Detecta errores `401 Unauthorized` para limpiar la sesión y redirigir al login automáticamente.
+- **Route Guards:**
+  - **`ProtectedRoute`:** Bloquea el acceso al Dashboard si no existe una sesión activa.
+  - **`GuestRoute`:** Evita que usuarios ya logueados accedan a las páginas de Login o Registro.
+- **Persistencia:** Gestión automática de `access_token` y `refresh_token` en el `localStorage`.
+
+
+
+
 ## Documentación adicional
 
 - **`FRONTEND_MASTER_PLAN.md`**: requerimientos por RF, vistas, reglas y endpoints esperados.
@@ -168,3 +204,4 @@ Contratos del **módulo IA** en `FRONTEND_MASTER_PLAN.md` (secciones C y D), coi
   <b>Smart Greenhouse — Frontend</b><br/>
   <sub>Panel operativo para invernaderos inteligentes</sub>
 </p>
+

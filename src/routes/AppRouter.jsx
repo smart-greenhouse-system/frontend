@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import GuestRoute from "../components/GuestRoute";
+import ProtectedRoute from "../components/ProtectedRoute";
 import Login from "../modules/auth/pages/Login";
 import Register from "../modules/auth/pages/Register";
 import ForgotPassword from "../modules/auth/pages/ForgotPassword";
@@ -19,24 +21,29 @@ const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rutas Públicas */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Login / Register: invitados; si ya hay sesión → /dashboard */}
+        <Route element={<GuestRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Rutas Privadas con Layout (M08) */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<DashboardHome />} />
-          <Route path="/inventory" element={<InventoryList />} />
-          <Route path="/inventory/crops" element={<CropManagement />} />
-          <Route path="/inventory/harvest-estimation" element={<HarvestEstimation />} />
-          <Route path="/inventory/history" element={<CropHistory />} />
-          <Route path="/inventory/consumption" element={<ResourceConsumption />} />
-          <Route path="/inventory/reports" element={<Reports />} />
-          <Route path="/monitoreo" element={<MonitoreoIoT />} />
-          <Route path="/control" element={<Control />} />
-          <Route path="/alertas" element={<Alertas />} />
+        {/* Rutas privadas: exigen token; luego layout del dashboard */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<DashboardHome />} />
+            <Route path="/inventory" element={<InventoryList />} />
+            <Route path="/inventory/crops" element={<CropManagement />} />
+            <Route path="/inventory/harvest-estimation" element={<HarvestEstimation />} />
+            <Route path="/inventory/history" element={<CropHistory />} />
+            <Route path="/inventory/consumption" element={<ResourceConsumption />} />
+            <Route path="/inventory/reports" element={<Reports />} />
+            <Route path="/monitoreo" element={<MonitoreoIoT />} />
+            <Route path="/control" element={<Control />} />
+            <Route path="/alertas" element={<Alertas />} />
+          </Route>
         </Route>
 
         {/* Redirección por defecto */}
