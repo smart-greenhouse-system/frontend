@@ -75,7 +75,7 @@ Todas las rutas privadas comparten **`DashboardLayout`** (sidebar responsive, na
 
 | Ruta | Descripción |
 | :--- | :--- |
-| `/dashboard` | Home del panel: KPIs, resumen operativo y accesos rápidos al dominio del invernadero. |
+| `/dashboard` | Home del panel: KPIs responsive, **panel de IA** (`AIInsightsPanel`: confianza, estado de planta, tiempo hasta cosecha vía `fetchHarvestEstimation` con fallback demo), **banner de estado** dinámico (`StatusBanner` según alertas e insumos bajos), últimos movimientos de inventario. |
 | `/inventory` | Listado principal de inventario (insumos y existencias). |
 | `/inventory/crops` | Gestión de cultivos: notas de operador, registro de cosecha y flujos asociados (RF-25 / RF-27). |
 | `/inventory/harvest-estimation` | **Módulo de IA — Cosecha estimada (RF-26):** tabla de cultivos activos (demo o enlazada a datos), detalle por cultivo, madurez, fuente de estimación (`source`) y acción **Actualizar estimación**; contratos ampliados de IA en `FRONTEND_MASTER_PLAN.md` (secciones C y D). |
@@ -120,6 +120,13 @@ Piezas reutilizables para mantener consistencia visual y comportamiento en formu
 | **`Button.jsx`** | Botón accesible con estilo primario (`farm-green-dark`), hover y anillo de foco; acepta `className` para variantes secundarias o ancho auto sin perder tokens del tema. |
 | **`Input.jsx`** | Campo de formulario con `label` opcional, soporte de `error` (borde y anillo rojo), estados de foco con anillo verde y tipografía legible en móvil. |
 | **`Modal.jsx`** | Diálogo modal (`role="dialog"`, `aria-modal`), overlay semitransparente, cierre al pulsar fuera o con icono **X** (Lucide), contenedor `max-w-2xl` y márgenes laterales para pantallas pequeñas. |
+| **`AIInsightsPanel.jsx`** | Resumen de IA en dashboard: barra de confianza (%), badge de estado de planta (saludable / riesgo / crítico) y tiempo estimado hasta cosecha. Consume `GET …/harvest-estimation` (`fetchHarvestEstimation`); si no hay API o falla la petición, muestra datos demo coherentes. Skeleton de carga (tres bloques `animate-pulse`). Expone `onLoadingChange` para coordinar el skeleton del banner. |
+| **`StatusBanner.jsx`** | Banner de **estado general** del invernadero según KPIs: **OK** (verde, sin alertas ni insumos bajos), **Alerta** (ámbar, ≥1 alerta o ≥1 insumo bajo), **Crítico** (rojo, más de 3 alertas activas). Iconos Lucide: `CheckCircle`, `TriangleAlert`, `XCircle`. |
+
+### Dashboard y Monitoreo IoT (última revisión UI/UX)
+
+- **`DashboardHome.jsx`:** grid de KPIs `1 / 2 / 4` columnas (móvil / tablet / desktop), valores grandes `text-xl sm:text-2xl`, integración de `AIInsightsPanel` entre KPIs y el banner, skeleton de ancho completo (`h-10`) para el `StatusBanner` mientras el panel de IA termina de cargar.
+- **`MonitoreoIoT.jsx`:** spinner centrado solo en la **primera carga** (`data === null` durante el mock con delay ~650 ms); en **polling** solo indicador sutil (punto con `animate-ping` + “Actualizando…”). Ajustes responsive en cabecera, paddings y tipografía de métricas.
 
 ---
 
@@ -128,10 +135,10 @@ Piezas reutilizables para mantener consistencia visual y comportamiento en formu
 | Módulo (plan) | Alcance en frontend | Estado |
 | :--- | :--- | :--- |
 | **M01 — Autenticación** | Login, Registro, Guards e Infraestructura JWT | 100% |
-| **M02 — Monitoreo IoT** | Vista de sensores integrada | UI Lista / Datos Mock |
+| **M02 — Monitoreo IoT** | Vista de sensores integrada | UI Lista / Datos Mock + carga inicial (spinner) y refresco en segundo plano |
 | **M03 — Control IoT** | Panel de actuadores integrado | UI Lista / Datos Mock |
 | **M05 — Inventario** | Inventario, Consumo, Histórico y Cosecha Estimada | 100% |
-| **M08 — Dashboard y UX** | Shell principal, Sidebar y Responsive | 100% |
+| **M08 — Dashboard y UX** | Shell principal, Sidebar, Responsive, home con IA y banner de estado | 100% |
 
 - **Datos:** parte de las pantallas IoT y de demostración usan **mocks** locales; los endpoints reales deben respetar `FRONTEND_MASTER_PLAN.md`. La variable de entorno **`VITE_API_BASE_URL`** (sin barra final) es la base usada por `src/lib/*` para llamadas HTTP.
 
@@ -168,7 +175,7 @@ Actualmente, el sistema de autenticación y peticiones se encuentra en **Modo Mo
 | :--- | :--- | :--- |
 | `admin@admin.com` | `Admin123*` | Administrador (Mock) |
 
-> **Nota:** Al ingresar estas credenciales, el sistema generará un token JWT simulado y permitirá el acceso a todas las rutas protegidas.## 🚀 Desarrollo y Pruebas (Modo Mock)
+> **Nota:** Al ingresar estas credenciales, el sistema generará un token JWT simulado y permitirá el acceso a todas las rutas protegidas.
 
 ## 🛡️ Infraestructura y Seguridad
 

@@ -170,16 +170,16 @@ const MonitoreoIoT = () => {
     : null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-3 py-6 sm:px-4 sm:py-10">
       <div className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-lg">
-        <div className="rounded-t-2xl bg-farm-green-dark px-8 py-6 text-white">
-          <h1 className="text-3xl font-semibold">Monitoreo IoT</h1>
-          <p className="mt-1 text-sm text-farm-green-light/90">
+        <div className="rounded-t-2xl bg-farm-green-dark px-4 py-5 text-white sm:px-8 sm:py-6">
+          <h1 className="text-2xl font-semibold sm:text-3xl">Monitoreo IoT</h1>
+          <p className="mt-1 text-xs text-farm-green-light/90 sm:text-sm">
             Lecturas ambientales según el contrato de sensores del plan maestro.
           </p>
         </div>
 
-        <div className="space-y-8 px-8 py-10 sm:px-10">
+        <div className="space-y-6 px-4 py-8 sm:space-y-8 sm:px-10 sm:py-10">
           {error && (
             <div
               className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
@@ -204,8 +204,8 @@ const MonitoreoIoT = () => {
             </div>
           )}
 
-          {loading && !data ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
+          {data === null && loading && !error ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center sm:py-16">
               <div
                 className="h-10 w-10 animate-spin rounded-full border-2 border-farm-green-light border-t-farm-green-dark"
                 aria-hidden
@@ -216,11 +216,21 @@ const MonitoreoIoT = () => {
             </div>
           ) : data ? (
             <>
-              {refreshing && (
-                <p className="text-xs text-gray-500">Actualizando lecturas…</p>
-              )}
+              {refreshing ? (
+                <div
+                  className="flex items-center justify-end gap-2 text-xs text-gray-500"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-farm-green opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-farm-green-dark" />
+                  </span>
+                  <span className="font-medium text-gray-600">Actualizando…</span>
+                </div>
+              ) : null}
 
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8">
                 {METRIC_CARDS.map(({ key, label, unit, format, Icon }) => {
                   const raw = data[key];
                   const display = format(raw);
@@ -230,16 +240,16 @@ const MonitoreoIoT = () => {
                   return (
                     <div
                       key={key}
-                      className="flex min-h-[200px] flex-col rounded-2xl border border-farm-green/15 bg-farm-green-light/80 p-8 shadow-sm transition-shadow hover:shadow-md"
+                      className="flex min-h-[180px] flex-col rounded-2xl border border-farm-green/15 bg-farm-green-light/80 p-5 shadow-sm transition-shadow hover:shadow-md sm:min-h-[200px] sm:p-8"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <p className="text-sm font-semibold uppercase tracking-wide text-farm-green-dark/75">
                             {label}
                           </p>
-                          <p className="mt-3 text-4xl font-bold tabular-nums tracking-tight text-farm-green-dark sm:text-[2.5rem]">
+                          <p className="mt-3 text-3xl font-bold tabular-nums tracking-tight text-farm-green-dark sm:text-4xl sm:tracking-tight lg:text-[2.5rem]">
                             {display}
-                            <span className="ml-1.5 text-xl font-semibold text-farm-green-dark/80 sm:text-2xl">
+                            <span className="ml-1.5 text-lg font-semibold text-farm-green-dark/80 sm:text-xl sm:text-2xl">
                               {unit}
                             </span>
                           </p>

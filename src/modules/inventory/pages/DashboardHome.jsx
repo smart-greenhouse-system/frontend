@@ -1,16 +1,26 @@
+import { useCallback, useState } from "react";
 import {
   Thermometer,
   Droplets,
   TriangleAlert,
   PackageSearch,
-  Leaf,
 } from "lucide-react";
+import AIInsightsPanel from "../../../components/ui/AIInsightsPanel";
+import StatusBanner from "../../../components/ui/StatusBanner";
+
+/** Valores numéricos compartidos entre KPI cards y StatusBanner */
+const dashboardStats = {
+  temperature: "25.5 °C",
+  humidity: "60%",
+  activeAlerts: 3,
+  lowStock: 2,
+};
 
 const kpiCards = [
   {
     id: "temperature",
     label: "Temperatura",
-    value: "25.5 °C",
+    valueKey: "temperature",
     icon: Thermometer,
     accent: "text-orange-500",
     bg: "bg-orange-50",
@@ -18,7 +28,7 @@ const kpiCards = [
   {
     id: "humidity",
     label: "Humedad",
-    value: "60%",
+    valueKey: "humidity",
     icon: Droplets,
     accent: "text-sky-600",
     bg: "bg-sky-50",
@@ -26,7 +36,7 @@ const kpiCards = [
   {
     id: "alerts",
     label: "Alertas activas",
-    value: "3",
+    valueKey: "activeAlerts",
     icon: TriangleAlert,
     accent: "text-red-600",
     bg: "bg-red-50",
@@ -34,7 +44,7 @@ const kpiCards = [
   {
     id: "low-stock",
     label: "Insumos bajos",
-    value: "2",
+    valueKey: "lowStock",
     icon: PackageSearch,
     accent: "text-amber-600",
     bg: "bg-amber-50",
@@ -48,6 +58,11 @@ const recentInventoryMovements = [
 ];
 
 const DashboardHome = () => {
+  const [statusBannerLoading, setStatusBannerLoading] = useState(true);
+  const handleAiLoadingChange = useCallback((loading) => {
+    setStatusBannerLoading(loading);
+  }, []);
+
   return (
     <section className="space-y-6">
       <header>
@@ -57,15 +72,17 @@ const DashboardHome = () => {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {kpiCards.map(({ id, label, value, icon: Icon, accent, bg }) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {kpiCards.map(({ id, label, valueKey, icon: Icon, accent, bg }) => (
           <article key={id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-600">{label}</p>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">{value}</p>
+                <p className="mt-2 text-xl font-semibold tabular-nums text-gray-900 sm:text-2xl">
+                  {dashboardStats[valueKey]}
+                </p>
               </div>
-              <span className={`rounded-xl p-2 ${bg}`}>
+              <span className={`shrink-0 rounded-xl p-2 ${bg}`}>
                 <Icon className={`h-5 w-5 ${accent}`} />
               </span>
             </div>
@@ -73,12 +90,17 @@ const DashboardHome = () => {
         ))}
       </div>
 
-      <div className="flex items-center gap-3 rounded-2xl border border-farm-green/20 bg-farm-green-light px-4 py-3">
-        <Leaf className="h-5 w-5 text-farm-green-dark" />
-        <p className="text-sm font-medium text-farm-green-dark">
-          Estado del Invernadero: Condición Óptima
-        </p>
-      </div>
+      <AIInsightsPanel onLoadingChange={handleAiLoadingChange} />
+
+      {statusBannerLoading ? (
+        <div
+          className="h-10 w-full animate-pulse rounded-2xl bg-gray-200 shadow-sm"
+          aria-busy="true"
+          aria-label="Cargando estado del invernadero"
+        />
+      ) : (
+        <StatusBanner alerts={dashboardStats.activeAlerts} lowStock={dashboardStats.lowStock} />
+      )}
 
       <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="border-b border-gray-100 px-5 py-4">
