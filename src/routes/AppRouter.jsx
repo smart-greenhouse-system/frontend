@@ -15,7 +15,9 @@ import HarvestEstimation from "../modules/inventory/pages/HarvestEstimation";
 import DashboardLayout from "../modules/layout/DashboardLayout";
 import MonitoreoIoT from "../modules/monitoreo/MonitoreoIoT";
 import Control from "../modules/control/Control";
-import Alertas from "../modules/alertas/Alertas";
+import AlertsPage from "../modules/alerts/pages/AlertsPage";
+import NotificationsCenterPage from "../modules/notifications/pages/NotificationsCenterPage";
+import GreenhouseConfigPage from "../modules/config/pages/GreenhouseConfigPage";
 
 const AppRouter = () => {
   return (
@@ -42,7 +44,9 @@ const AppRouter = () => {
             <Route path="/inventory/reports" element={<Reports />} />
             <Route path="/monitoreo" element={<MonitoreoIoT />} />
             <Route path="/control" element={<Control />} />
-            <Route path="/alertas" element={<Alertas />} />
+            <Route path="/alertas" element={<AlertsPage />} />
+            <Route path="/notificaciones" element={<NotificationsCenterPage />} />
+            <Route path="/config" element={<GreenhouseConfigPage />} />
           </Route>
         </Route>
 

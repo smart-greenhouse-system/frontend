@@ -18,6 +18,8 @@ import {
   Bell,
   ClipboardList,
   CalendarDays,
+  Settings2,
+  BellRing,
 } from "lucide-react";
 
 const mainLinks = [
@@ -25,6 +27,8 @@ const mainLinks = [
   { to: "/monitoreo", label: "Monitoreo IoT", icon: Activity },
   { to: "/control", label: "Control", icon: SlidersHorizontal },
   { to: "/alertas", label: "Alertas", icon: Bell },
+  { to: "/notificaciones", label: "Notificaciones", icon: BellRing },
+  { to: "/config", label: "Configuración", icon: Settings2 },
   { to: "/inventory", label: "Inventario", icon: Boxes },
   { to: "/inventory/crops", label: "Cultivos", icon: ClipboardList },
   { to: "/inventory/harvest-estimation", label: "Cosecha estimada", icon: CalendarDays },
@@ -38,7 +42,7 @@ const secondaryLinks = [{ to: "/users", label: "Usuarios", icon: UsersRound }];
 const SidebarLink = ({ to, label, Icon, collapsed = false, onNavigate }) => (
   <NavLink
     to={to}
-    end={to === "/dashboard" || to === "/inventory"}
+    end
     onClick={onNavigate}
     className={({ isActive }) =>
       [
