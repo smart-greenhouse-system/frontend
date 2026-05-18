@@ -4,7 +4,6 @@ import Input from "../../../components/ui/Input";
 import {
   fetchAlerts,
   getStoredUserId,
-  getUserAuthToken,
   patchNotificationPreferences,
 } from "../../../lib/alertsApi";
 
@@ -117,7 +116,6 @@ function NotificationPreferencesPanel() {
       return;
     }
 
-    const token = getUserAuthToken();
     const body = {
       events: {
         critical_alerts: true,
@@ -131,7 +129,7 @@ function NotificationPreferencesPanel() {
 
     setSaving(true);
     try {
-      const data = await patchNotificationPreferences(userId, body, token);
+      const data = await patchNotificationPreferences(userId, body);
       setMessage(data?.message || "Preferencias guardadas.");
       localStorage.setItem(PREFS_STORAGE_KEY, JSON.stringify({ push, email, in_app: inApp }));
     } catch (e) {
@@ -212,8 +210,7 @@ const AlertsPage = () => {
     setFetchError("");
     setLoading(true);
     try {
-      const token = getUserAuthToken();
-      const data = await fetchAlerts({ greenhouseId, from, to }, token);
+      const data = await fetchAlerts({ greenhouseId, from, to });
       const rawList = Array.isArray(data?.alerts) ? data.alerts : [];
       setAlerts(rawList.map(normalizeAlert));
     } catch (e) {

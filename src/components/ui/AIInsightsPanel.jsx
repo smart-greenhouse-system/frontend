@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Brain, CalendarClock } from "lucide-react";
-import { fetchHarvestEstimation, getUserAuthToken } from "../../lib/harvestEstimationApi";
+import { fetchHarvestEstimation } from "../../lib/harvestEstimationApi";
 
 const DEMO_CROP_ID = "crop-tom-01";
 
@@ -170,8 +170,7 @@ function AIInsightsPanel({ cropId = DEMO_CROP_ID, onLoadingChange }) {
 
     (async () => {
       try {
-        const token = getUserAuthToken();
-        const remote = await fetchHarvestEstimation(cropId, token);
+        const remote = await fetchHarvestEstimation(cropId);
         if (cancelled) return;
         setInsights(mapRemoteToInsights(remote));
         setStatus("success");

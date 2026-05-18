@@ -10,41 +10,41 @@ import StatusBanner from "../../../components/ui/StatusBanner";
 
 /** Valores numéricos compartidos entre KPI cards y StatusBanner */
 const dashboardStats = {
-  temperature: "25.5 °C",
-  humidity: "60%",
-  activeAlerts: 3,
-  lowStock: 2,
+  temperatura: "25.5 °C",
+  humedad_relativa: "60%",
+  alertas_activas: 3,
+  insumos_bajos: 2,
 };
 
 const kpiCards = [
   {
-    id: "temperature",
+    id: "temperatura",
     label: "Temperatura",
-    valueKey: "temperature",
+    valueKey: "temperatura",
     icon: Thermometer,
     accent: "text-orange-500",
     bg: "bg-orange-50",
   },
   {
-    id: "humidity",
+    id: "humedad_relativa",
     label: "Humedad",
-    valueKey: "humidity",
+    valueKey: "humedad_relativa",
     icon: Droplets,
     accent: "text-sky-600",
     bg: "bg-sky-50",
   },
   {
-    id: "alerts",
+    id: "alertas",
     label: "Alertas activas",
-    valueKey: "activeAlerts",
+    valueKey: "alertas_activas",
     icon: TriangleAlert,
     accent: "text-red-600",
     bg: "bg-red-50",
   },
   {
-    id: "low-stock",
+    id: "insumos_bajos",
     label: "Insumos bajos",
-    valueKey: "lowStock",
+    valueKey: "insumos_bajos",
     icon: PackageSearch,
     accent: "text-amber-600",
     bg: "bg-amber-50",
@@ -99,7 +99,7 @@ const DashboardHome = () => {
           aria-label="Cargando estado del invernadero"
         />
       ) : (
-        <StatusBanner alerts={dashboardStats.activeAlerts} lowStock={dashboardStats.lowStock} />
+        <StatusBanner alerts={dashboardStats.alertas_activas} lowStock={dashboardStats.insumos_bajos} />
       )}
 
       <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">

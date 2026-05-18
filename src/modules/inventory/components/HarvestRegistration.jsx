@@ -50,7 +50,6 @@ const HarvestRegistration = ({
       return;
     }
 
-    const token = getAuthToken();
     const body = { harvest_date: harvestDate };
     const q = quantityRaw.trim();
     if (q !== "") {
@@ -59,7 +58,7 @@ const HarvestRegistration = ({
 
     setLoading(true);
     try {
-      const data = await postCropHarvest(cropId, body, token);
+      const data = await postCropHarvest(cropId, body);
       setSuccessMessage(data?.message || "Cosecha registrada correctamente.");
       setDone(true);
       onSuccess?.(data);

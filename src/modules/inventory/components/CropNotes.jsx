@@ -55,7 +55,6 @@ const CropNotes = ({
     setSubmitError("");
     if (!validate()) return;
 
-    const token = getAuthToken();
     const payload = {
       note: note.trim(),
       date: observationDate,
@@ -63,7 +62,7 @@ const CropNotes = ({
 
     setLoading(true);
     try {
-      const data = await postCropNote(cropId, payload, token);
+      const data = await postCropNote(cropId, payload);
       const title = noteTitleFromText(payload.note);
       setRows((prev) => [
         {

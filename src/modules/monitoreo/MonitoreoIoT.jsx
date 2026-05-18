@@ -30,7 +30,7 @@ const MOCK_BASE = {
   temperatura: 25.5,
   humedad_suelo: 60,
   humedad_relativa: 40,
-  luz: 8200,
+  iluminacion: 8200,
 };
 
 function buildMockPayload() {
@@ -45,7 +45,7 @@ function buildMockPayload() {
     ),
     humedad_suelo: jitter(MOCK_BASE.humedad_suelo, 4),
     humedad_relativa: jitter(MOCK_BASE.humedad_relativa, 5),
-    luz: jitter(MOCK_BASE.luz, 400),
+    iluminacion: jitter(MOCK_BASE.iluminacion, 400),
   };
 }
 
@@ -76,7 +76,7 @@ function levelPercentForMetric(key, raw) {
     case "humedad_suelo":
     case "humedad_relativa":
       return clampPercent(raw);
-    case "luz":
+    case "iluminacion":
       return clampPercent((raw / 12000) * 100);
     default:
       return 0;
@@ -106,8 +106,8 @@ const METRIC_CARDS = [
     format: (v) => (typeof v === "number" ? String(v) : "—"),
   },
   {
-    key: "luz",
-    label: "Luz",
+    key: "iluminacion",
+    label: "Iluminación",
     unit: "lux",
     Icon: Sun,
     format: (v) => (typeof v === "number" ? String(v) : "—"),
@@ -124,16 +124,16 @@ function generateMockHistory() {
 
   // Variaciones realistas centradas alrededor de los valores base
   const seeds = [
-    { temp: 25.3, hs: 62, hr: 41, luz: 8350 },
-    { temp: 25.8, hs: 59, hr: 39, luz: 7980 },
-    { temp: 26.1, hs: 57, hr: 38, luz: 8510 },
-    { temp: 25.6, hs: 61, hr: 42, luz: 8120 },
-    { temp: 24.9, hs: 63, hr: 44, luz: 7650 },
-    { temp: 25.2, hs: 60, hr: 40, luz: 8280 },
-    { temp: 25.7, hs: 58, hr: 37, luz: 8740 },
-    { temp: 26.0, hs: 56, hr: 36, luz: 8900 },
-    { temp: 25.4, hs: 64, hr: 43, luz: 7800 },
-    { temp: 25.0, hs: 61, hr: 41, luz: 8050 },
+    { temp: 25.3, hs: 62, hr: 41, iluminacion: 8350 },
+    { temp: 25.8, hs: 59, hr: 39, iluminacion: 7980 },
+    { temp: 26.1, hs: 57, hr: 38, iluminacion: 8510 },
+    { temp: 25.6, hs: 61, hr: 42, iluminacion: 8120 },
+    { temp: 24.9, hs: 63, hr: 44, iluminacion: 7650 },
+    { temp: 25.2, hs: 60, hr: 40, iluminacion: 8280 },
+    { temp: 25.7, hs: 58, hr: 37, iluminacion: 8740 },
+    { temp: 26.0, hs: 56, hr: 36, iluminacion: 8900 },
+    { temp: 25.4, hs: 64, hr: 43, iluminacion: 7800 },
+    { temp: 25.0, hs: 61, hr: 41, iluminacion: 8050 },
   ];
 
   for (let i = 0; i < 10; i++) {
@@ -144,7 +144,7 @@ function generateMockHistory() {
       temperatura: seeds[i].temp,
       humedad_suelo: seeds[i].hs,
       humedad_relativa: seeds[i].hr,
-      luz: seeds[i].luz,
+      iluminacion: seeds[i].iluminacion,
     });
   }
 
@@ -447,7 +447,7 @@ const MonitoreoIoT = () => {
                         <th className="px-4 py-3 text-right sm:px-6">
                           <span className="inline-flex items-center gap-1.5">
                             <Sun className="h-3.5 w-3.5" strokeWidth={1.75} />
-                            Luz (lux)
+                            Iluminación (lux)
                           </span>
                         </th>
                       </tr>
@@ -474,7 +474,7 @@ const MonitoreoIoT = () => {
                             {row.humedad_relativa}
                           </td>
                           <td className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums text-gray-700 sm:px-6">
-                            {row.luz.toLocaleString("es-ES")}
+                            {row.iluminacion.toLocaleString("es-ES")}
                           </td>
                         </tr>
                       ))}

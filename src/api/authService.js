@@ -1,18 +1,17 @@
 import api, { STORAGE_KEYS } from "./api.js";
 
-/** Guarda access/refresh y alias `token` para módulos legacy (cropApi, etc.). */
-export function persistAuthSession({ access_token, refresh_token }) {
-  if (access_token) {
-    localStorage.setItem(STORAGE_KEYS.accessToken, access_token);
-    localStorage.setItem("token", access_token);
+/** Guarda token y type según contrato del backend */
+export function persistAuthSession({ token, type }) {
+  if (token) {
+    localStorage.setItem(STORAGE_KEYS.token, token);
   }
-  if (refresh_token) {
-    localStorage.setItem(STORAGE_KEYS.refreshToken, refresh_token);
+  if (type) {
+    localStorage.setItem(STORAGE_KEYS.type, type);
   }
 }
 
 /**
- * RF-02: POST /api/v1/auth/login
+ * RF-02: POST /api/auth/login
  * @param {{ email: string; password: string }} credentials
  */
 export async function login(credentials) {
@@ -29,8 +28,8 @@ export async function login(credentials) {
   if (credentials.email === MOCK_EMAIL && credentials.password === MOCK_PASSWORD) {
     // Si coinciden, devolvemos un objeto de éxito idéntico al del Backend
     return {
-      access_token: "fake-jwt-token-santiago-lider",
-      refresh_token: "fake-refresh-token-123",
+      token: "fake-jwt-token-santiago-lider",
+      type: "Bearer",
       expires_in: 3600
     };
   } else {
@@ -46,7 +45,7 @@ export async function login(credentials) {
   /* 
   // COMENTADO PARA NO USAR EL BACKEND TODAVÍA:
   const { data } = await api.post(
-    "/api/v1/auth/login",
+    "/api/auth/login",
     credentials,
     { skipAuthRedirect: true }
   );
@@ -74,9 +73,12 @@ export async function register(payload) {
 
 export function logout() {
   // 1. Limpiamos todo el localStorage
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('token'); // por si acaso
+  localStorage.removeItem('token');
+  localStorage.removeItem('type');
+  localStorage.removeItem('access_token'); // legacy
+  localStorage.removeItem('refresh_token'); // legacy
+  localStorage.removeItem('auth_token'); // legacy
+  localStorage.removeItem('operator_token'); // legacy
 
   // 2. Redirigimos al login
   window.location.assign('/login');

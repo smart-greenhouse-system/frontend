@@ -1,15 +1,17 @@
 import axios from "axios";
 
 export const STORAGE_KEYS = {
-  accessToken: "access_token",
-  refreshToken: "refresh_token",
+  token: "token",
+  type: "type",
 };
 
-const LEGACY_TOKEN_KEYS = ["token", "auth_token", "operator_token"];
+// Legacy keys for backward compatibility
+const LEGACY_TOKEN_KEYS = ["access_token", "refresh_token", "auth_token", "operator_token"];
 
 export function getStoredAccessToken() {
   return (
-    localStorage.getItem(STORAGE_KEYS.accessToken) ||
+    localStorage.getItem(STORAGE_KEYS.token) ||
+    localStorage.getItem("access_token") ||
     localStorage.getItem("token") ||
     localStorage.getItem("auth_token") ||
     localStorage.getItem("operator_token") ||
@@ -18,8 +20,8 @@ export function getStoredAccessToken() {
 }
 
 export function clearAuthStorage() {
-  localStorage.removeItem(STORAGE_KEYS.accessToken);
-  localStorage.removeItem(STORAGE_KEYS.refreshToken);
+  localStorage.removeItem(STORAGE_KEYS.token);
+  localStorage.removeItem(STORAGE_KEYS.type);
   for (const key of LEGACY_TOKEN_KEYS) {
     localStorage.removeItem(key);
   }

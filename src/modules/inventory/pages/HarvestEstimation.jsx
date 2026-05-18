@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Calendar, Sprout } from "lucide-react";
 import Button from "../../../components/ui/Button";
-import { fetchHarvestEstimation, getUserAuthToken } from "../../../lib/harvestEstimationApi";
+import { fetchHarvestEstimation } from "../../../lib/harvestEstimationApi";
 
 const MATURITY_EMOJI = {
   in_progress: "🌱",
@@ -81,8 +81,7 @@ const HarvestEstimation = () => {
     setDetailError("");
     setLoadingDetail(true);
     try {
-      const token = getUserAuthToken();
-      const remote = await fetchHarvestEstimation(selectedId, token);
+      const remote = await fetchHarvestEstimation(selectedId);
       if (remote && typeof remote === "object") {
         setDetail({
           crop_id: remote.crop_id,
