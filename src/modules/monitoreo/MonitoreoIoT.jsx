@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Activity, Clock, Cpu, RefreshCw, Server, Wifi, WifiOff, Gauge, ListChecks,
 } from "lucide-react";
+=======
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Clock, Cpu, RefreshCw, Server, Wifi } from "lucide-react";
+>>>>>>> 479eb6d696c3370cf2e720bcbfc671ffad2a6d10
 import { getLatestReadings } from "../../lib/sensorApi";
 import { getDevices } from "../../lib/deviceApi";
 import { getActuators } from "../../lib/actuatorApi";
@@ -10,6 +15,7 @@ import SensorCard from "./components/SensorCard";
 import SensorHistoryChart from "./components/SensorHistoryChart";
 
 const SENSOR_KEYS = ["temperatura", "humedad_suelo", "humedad_relativa", "iluminacion"];
+<<<<<<< HEAD
 const AUTO_REFRESH_MS = 15_000;
 
 const TWO_MIN_MS = 2 * 60 * 1000;
@@ -18,10 +24,18 @@ function isOnline(lastSeen) {
   if (!lastSeen) return false;
   return Date.now() - new Date(lastSeen).getTime() < TWO_MIN_MS;
 }
+=======
+const AUTO_REFRESH_MS = 10_000;
+>>>>>>> 479eb6d696c3370cf2e720bcbfc671ffad2a6d10
 
-/* ─────────────────────────────────────────────────────────────
-   MonitoreoIoT — Dashboard de sensores con auto-refresh
-   ───────────────────────────────────────────────────────────── */
+/**
+ * MonitoreoIoT — Persona B / Módulo 08 Sensores (FRONTEND_MASTER_PLAN.md)
+ *
+ * Flujo de datos (sin fetch directo):
+ * 1. getLatestReadings() → objeto plano por dispositivo: { device_id, temperatura,
+ *    humedad_relativa, humedad_suelo, iluminacion, timestamp }
+ * 2. SensorHistoryChart usa getSensorHistory(deviceId) con el mismo formato por fila.
+ */
 
 const MonitoreoIoT = () => {
   const mountedRef = useRef(true);
@@ -74,22 +88,32 @@ const MonitoreoIoT = () => {
     }
 
     try {
-      const data = await getLatestReadings();
+      const normalized = await getLatestReadings();
       if (!mountedRef.current) return;
 
+<<<<<<< HEAD
       const normalized = Array.isArray(data) ? data : [data];
+=======
+>>>>>>> 479eb6d696c3370cf2e720bcbfc671ffad2a6d10
       setReadings(normalized);
       setLastUpdated(new Date());
       setError(null);
 
+<<<<<<< HEAD
       if (!selectedDeviceId && normalized.length > 0) {
         const firstId = normalized[0].device_id;
         setSelectedDeviceId(firstId);
         setSearchParams({ deviceId: firstId }, { replace: true });
       }
+=======
+      setSelectedDeviceId((prev) => {
+        if (prev && normalized.some((r) => r.device_id === prev)) return prev;
+        return normalized[0]?.device_id ?? null;
+      });
+>>>>>>> 479eb6d696c3370cf2e720bcbfc671ffad2a6d10
     } catch (err) {
       if (!mountedRef.current) return;
-      const msg = err?.response?.data?.message || err.message || "Error al cargar lecturas";
+      const msg = err?.message || "Error al cargar lecturas";
       if (!silent) {
         setError(msg);
         setReadings(null);
@@ -98,7 +122,11 @@ const MonitoreoIoT = () => {
       if (!mountedRef.current) return;
       silent ? setRefreshing(false) : setLoading(false);
     }
+<<<<<<< HEAD
   }, [selectedDeviceId, setSearchParams]);
+=======
+  }, []);
+>>>>>>> 479eb6d696c3370cf2e720bcbfc671ffad2a6d10
 
   // ── auto-refresh ──
   useEffect(() => {
@@ -198,6 +226,7 @@ const MonitoreoIoT = () => {
         </div>
       )}
 
+<<<<<<< HEAD
       {/* NO READINGS — empty state */}
       {readings !== null && readings.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-20 text-center">
@@ -206,6 +235,42 @@ const MonitoreoIoT = () => {
           <p className="text-xs text-gray-400 mt-1">Los datos aparecen automáticamente cuando los dispositivos envían información vía MQTT.</p>
         </div>
       )}
+=======
+      {readings?.length === 0 && !loading && !error && (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-white/70 px-6 py-14 text-center">
+          <p className="text-sm font-medium text-gray-600">No hay lecturas de sensores disponibles.</p>
+          <p className="mt-1 text-xs text-gray-400">
+            Verifica que el backend esté enviando datos en GET /api/sensors/latest.
+          </p>
+        </div>
+      )}
+
+      {readings && readings.length > 0 && (
+        <>
+          {/* Device selector (if multiple) */}
+          {readings.length > 1 && (
+            <div className="flex flex-wrap gap-2">
+              {readings.map((r) => {
+                const isActive = r.device_id === selectedDeviceId;
+                return (
+                  <button
+                    key={r.device_id}
+                    onClick={() => setSelectedDeviceId(r.device_id)}
+                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+                      isActive
+                        ? "bg-farm-green-dark text-white shadow-md"
+                        : "bg-white/80 text-gray-600 ring-1 ring-gray-200 hover:bg-white hover:shadow-sm"
+                    }`}
+                  >
+                    <Server className="h-4 w-4" strokeWidth={1.75} />
+                    {r.device_id}
+                    <span className={`h-2 w-2 rounded-full ${isActive ? "bg-green-400" : "bg-gray-300"}`} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+>>>>>>> 479eb6d696c3370cf2e720bcbfc671ffad2a6d10
 
       {/* DATA */}
       {readings && readings.length > 0 && (

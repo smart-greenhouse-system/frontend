@@ -11,8 +11,6 @@ import {
 } from "lucide-react";
 import { getEventos } from "../../lib/eventoApi";
 
-/* ─────────────── mapeo tipo → severidad ─────────────── */
-
 const TIPO_SEVERITY = {
   INFO: "info",
   SISTEMA: "info",
@@ -43,8 +41,6 @@ const SEVERITY_META = {
     badgeClass: "bg-red-600 text-white shadow-sm",
   },
 };
-
-/* ─────────────── helpers ─────────────── */
 
 function mapEvento(ev) {
   const rawTipo = (ev.event_type || "").toUpperCase();
@@ -90,8 +86,6 @@ function loadReadKeys() {
 function saveReadKeys(keys) {
   try { localStorage.setItem(LS_READ_KEY, JSON.stringify([...keys])); } catch { /* noop */ }
 }
-
-/* ─────────────── Componente ─────────────── */
 
 const Alertas = () => {
   const [alerts, setAlerts] = useState([]);
@@ -156,7 +150,6 @@ const Alertas = () => {
 
   return (
     <div className="min-h-screen space-y-6">
-      {/* ── HEADER ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-extrabold text-gray-800 sm:text-3xl">Alertas</h1>
@@ -183,7 +176,6 @@ const Alertas = () => {
         </div>
       ) : (
         <>
-          {/* ── FILTROS ── */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
               {SEVERITY_FILTERS.map(({ value, label }) => (
@@ -214,7 +206,6 @@ const Alertas = () => {
             </select>
           </div>
 
-          {/* ── LISTA ── */}
           {filteredAlerts.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-20 text-center">
               <Bell className="mb-3 h-10 w-10 text-gray-300" strokeWidth={1.5} />

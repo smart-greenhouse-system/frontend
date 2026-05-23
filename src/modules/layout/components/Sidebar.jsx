@@ -170,4 +170,3 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onCloseMobile, onToggleCollapse })
 };
 
 export default Sidebar;
-

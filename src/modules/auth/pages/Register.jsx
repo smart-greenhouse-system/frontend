@@ -7,7 +7,6 @@ import Input from "../../../components/ui/Input";
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -56,25 +55,25 @@ const Register = () => {
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-10">
       <div className="w-full max-w-3xl rounded-2xl bg-white shadow-lg">
         <div className="rounded-t-2xl bg-farm-green-dark px-8 py-6 text-white">
-          <h1 className="text-3xl font-semibold">Crear cuenta</h1>
-          <p className="mt-1 text-sm text-farm-green-light/90">
-            Registra tu usuario para acceder al sistema Smart GreenHouse.
-          </p>
+          <div className="flex items-center gap-4">
+            <img
+              src="/assets/iconoGreenHouse.jpg"
+              alt=""
+              className="h-14 w-14 rounded-xl object-cover ring-2 ring-white/25"
+              width={56}
+              height={56}
+            />
+            <div>
+              <p className="text-sm font-medium text-farm-green-light/90">GreenHouse</p>
+              <h1 className="text-3xl font-semibold">Crear cuenta</h1>
+              <p className="mt-1 text-sm text-farm-green-light/90">
+                Registro con correo y contraseña (POST /auth/register).
+              </p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 px-8 py-8">
-          <Input
-            id="name"
-            name="name"
-            label="Nombre"
-            type="text"
-            autoComplete="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Tu nombre completo"
-            required
-          />
-
           <Input
             id="email"
             name="email"
