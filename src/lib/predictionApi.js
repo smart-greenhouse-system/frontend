@@ -9,8 +9,3 @@ export async function getImageAnalysisHistory() {
   const res = await api.get("/predictions/image-analysis");
   return res.data;
 }
-
-export async function createPrediction(payload) {
-  const res = await api.post("/predictions", payload);
-  return res.data;
-}
