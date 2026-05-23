@@ -18,6 +18,7 @@ import {
   Bell,
   ClipboardList,
   CalendarDays,
+  Settings,
 } from "lucide-react";
 
 const mainLinks = [
@@ -33,7 +34,10 @@ const mainLinks = [
   { to: "/inventory/reports", label: "Reportes", icon: BarChart3 },
 ];
 
-const secondaryLinks = [{ to: "/users", label: "Usuarios", icon: UsersRound }];
+const secondaryLinks = [
+  { to: "/config", label: "Configuración", icon: Settings },
+  { to: "/users", label: "Usuarios", icon: UsersRound },
+];
 
 const SidebarLink = ({ to, label, Icon, collapsed = false, onNavigate }) => (
   <NavLink

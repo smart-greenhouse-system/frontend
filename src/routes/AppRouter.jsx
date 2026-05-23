@@ -15,6 +15,7 @@ import HarvestEstimation from "../modules/inventory/pages/HarvestEstimation";
 import DashboardLayout from "../modules/layout/DashboardLayout";
 import MonitoreoIoT from "../modules/monitoreo/MonitoreoIoT";
 import Control from "../modules/control/Control";
+import Config from "../modules/config/Config";
 import Alertas from "../modules/alertas/Alertas";
 
 const AppRouter = () => {
@@ -42,6 +43,7 @@ const AppRouter = () => {
             <Route path="/inventory/reports" element={<Reports />} />
             <Route path="/monitoreo" element={<MonitoreoIoT />} />
             <Route path="/control" element={<Control />} />
+            <Route path="/config" element={<Config />} />
             <Route path="/alertas" element={<Alertas />} />
           </Route>
         </Route>
