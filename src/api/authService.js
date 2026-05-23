@@ -1,16 +1,14 @@
-import { authApi, STORAGE_KEYS, clearAuthStorage } from "./api.js";
+import { authApi, clearAuthStorage } from "./api.js";
 
-export function persistAuthSession({ accessToken, tokenType }) {
+export function persistAuthSession({ accessToken }) {
   if (accessToken) {
-    localStorage.setItem(STORAGE_KEYS.token, accessToken);
-  }
-  if (tokenType) {
-    localStorage.setItem(STORAGE_KEYS.type, tokenType);
+    localStorage.setItem("token", accessToken);
   }
 }
 
 export async function login(credentials) {
   const { data } = await authApi.post("/auth/login", credentials);
+  persistAuthSession({ accessToken: data.token ?? data.accessToken });
   return data;
 }
 

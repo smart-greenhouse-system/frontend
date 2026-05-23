@@ -4,7 +4,6 @@ const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 export const STORAGE_KEYS = {
   token: "token",
-  type: "type",
 };
 
 export function getStoredAccessToken() {
@@ -12,8 +11,8 @@ export function getStoredAccessToken() {
 }
 
 export function clearAuthStorage() {
-  localStorage.removeItem(STORAGE_KEYS.token);
-  localStorage.removeItem(STORAGE_KEYS.type);
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
 }
 
 // Instancia principal para endpoints bajo /api/*
@@ -22,9 +21,9 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Instancia para endpoints de /auth (sin prefijo /api)
+// Instancia para endpoints de autenticación (también bajo /api/)
 const authApi = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_BASE ? `${API_BASE}/api` : "/api",
   headers: { "Content-Type": "application/json" },
 });
 
