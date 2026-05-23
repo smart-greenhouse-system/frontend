@@ -1,18 +1,26 @@
 import api from "../api/api.js";
 
 /**
- * @typedef {Object} EventoResponse
- * @property {string} origen
- * @property {string} tipo
- * @property {string} mensaje
+ * @typedef {Object} ActuatorEventResponse
+ * @property {string} id
+ * @property {string} device_id
+ * @property {string} actuator
+ * @property {string} action
+ * @property {boolean} executed
+ * @property {string} origin
+ * @property {string} event_type
+ * @property {string} status
+ * @property {string} topic
+ * @property {number} time_action
+ * @property {string} created_at
  */
 
 /**
- * Obtiene todos los eventos registrados.
- * @returns {Promise<EventoResponse[]>}
+ * Obtiene el historial de eventos de actuadores (fuente de alertas).
+ * @returns {Promise<ActuatorEventResponse[]>}
  */
 export async function getEventos() {
-  const { data } = await api.get("/eventos");
+  const { data } = await api.get("/actuator-events");
   return data;
 }
 

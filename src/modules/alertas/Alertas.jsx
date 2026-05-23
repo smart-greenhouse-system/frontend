@@ -46,19 +46,19 @@ const SEVERITY_META = {
 
 /* ─────────────── helpers ─────────────── */
 
-function alertKey(ev) {
-  return `${ev.origen}|${ev.tipo}|${ev.mensaje}`;
-}
-
 function mapEvento(ev) {
-  const rawTipo = (ev.tipo || "").toUpperCase();
+  const rawTipo = (ev.event_type || "").toUpperCase();
   const severity = TIPO_SEVERITY[rawTipo] ?? "info";
+  const actuatorName = ev.actuator || "";
+  const action = ev.action || "";
   return {
-    _key: alertKey(ev),
+    _key: ev.id,
     severity,
-    mensaje: ev.mensaje || "",
-    dispositivo: ev.origen || "—",
-    timestamp: ev.created_at || ev.createdAt || new Date().toISOString(),
+    mensaje: actuatorName
+      ? `Actuador [${actuatorName}] ejecutó acción [${action}]`
+      : `Evento de actuador (${action || "sin acción"})`,
+    dispositivo: ev.origin || ev.device_id || "—",
+    timestamp: ev.created_at || new Date().toISOString(),
     read: false,
   };
 }
@@ -96,21 +96,17 @@ function saveReadKeys(keys) {
 const Alertas = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [severityFilter, setSeverityFilter] = useState("all");
   const [originFilter, setOriginFilter] = useState("");
   const [readKeys, setReadKeys] = useState(loadReadKeys);
 
   const fetchAlerts = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await getEventos();
       const mapped = (Array.isArray(data) ? data : []).map(mapEvento);
       setAlerts(mapped);
-    } catch (err) {
-      const msg = err?.response?.data?.message || err.message || "No se pudieron cargar las alertas.";
-      setError(msg);
+    } catch {
       setAlerts([]);
     } finally {
       setLoading(false);
@@ -180,13 +176,6 @@ const Alertas = () => {
         </button>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800" role="alert">
-          <p className="font-semibold">Error al cargar alertas</p>
-          <p className="mt-1 text-red-700">{error}</p>
-        </div>
-      )}
-
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-farm-green-light border-t-farm-green-dark" />
@@ -230,7 +219,7 @@ const Alertas = () => {
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-20 text-center">
               <Bell className="mb-3 h-10 w-10 text-gray-300" strokeWidth={1.5} />
               <p className="text-sm font-medium text-gray-500">
-                {alerts.length === 0 ? "No hay alertas registradas" : "No hay alertas con estos filtros"}
+                {alerts.length === 0 ? "No hay alertas activas por el momento" : "No hay alertas con estos filtros"}
               </p>
             </div>
           ) : (

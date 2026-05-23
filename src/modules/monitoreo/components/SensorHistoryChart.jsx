@@ -1,16 +1,40 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend
+  ResponsiveContainer,
 } from "recharts";
 import { BarChart3, Loader2 } from "lucide-react";
 import { getSensorHistory } from "../../../lib/sensorApi";
 
-const LINES = [
-  { key: "temperatura",      color: "#ef4444", label: "Temp (°C)" },
-  { key: "humedad_suelo",    color: "#06b6d4", label: "Hum. Suelo (%)" },
-  { key: "humedad_relativa", color: "#14b8a6", label: "Hum. Relativa (%)" },
-  { key: "iluminacion",      color: "#f59e0b", label: "Iluminación (lux)" },
+const CHARTS = [
+  {
+    key: "temperatura",
+    label: "Tendencia de Temperatura",
+    unit: "°C",
+    color: "#ef4444",
+    yDomain: [0, 50],
+  },
+  {
+    key: "humedad_suelo",
+    label: "Tendencia de Humedad del Suelo",
+    unit: "%",
+    color: "#06b6d4",
+    yDomain: [0, 100],
+  },
+  {
+    key: "humedad_relativa",
+    label: "Tendencia de Humedad Relativa",
+    unit: "%",
+    color: "#14b8a6",
+    yDomain: [0, 100],
+  },
+  {
+    key: "iluminacion",
+    label: "Tendencia de Iluminación",
+    unit: "lux",
+    color: "#f59e0b",
+    yDomain: "auto",
+  },
 ];
 
 function formatTick(iso) {
@@ -19,19 +43,17 @@ function formatTick(iso) {
   return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
-function CustomTooltip({ active, payload, label }) {
+function ChartTooltip({ active, payload, label, unit }) {
   if (!active || !payload?.length) return null;
   const d = new Date(label);
   const time = d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "medium" });
-
+  const val = payload[0]?.value;
   return (
     <div className="rounded-lg border border-gray-200 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-sm">
-      <p className="mb-1.5 text-xs font-medium text-gray-500">{time}</p>
-      {payload.map((entry) => (
-        <p key={entry.dataKey} className="text-xs" style={{ color: entry.color }}>
-          <span className="font-semibold">{entry.name}:</span> {entry.value}
-        </p>
-      ))}
+      <p className="mb-1 text-xs font-medium text-gray-500">{time}</p>
+      <p className="text-xs font-semibold" style={{ color: payload[0]?.color }}>
+        {val} {unit}
+      </p>
     </div>
   );
 }
@@ -40,9 +62,6 @@ export default function SensorHistoryChart({ deviceId }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [visibleLines, setVisibleLines] = useState(() =>
-    Object.fromEntries(LINES.map((l) => [l.key, true]))
-  );
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -73,10 +92,6 @@ export default function SensorHistoryChart({ deviceId }) {
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
-
-  const toggleLine = (key) => {
-    setVisibleLines((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
 
   if (!deviceId) {
     return (
@@ -122,59 +137,47 @@ export default function SensorHistoryChart({ deviceId }) {
   }
 
   return (
-    <div className="rounded-2xl border border-white/60 bg-white/80 p-5 shadow-sm backdrop-blur-sm sm:p-6">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-bold text-gray-800 sm:text-lg">
-          Historial — <span className="font-mono text-farm-green-dark">{deviceId}</span>
-        </h3>
-        {/* Toggle buttons */}
-        <div className="flex flex-wrap gap-1.5">
-          {LINES.map(({ key, color, label }) => (
-            <button
-              key={key}
-              onClick={() => toggleLine(key)}
-              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
-                visibleLines[key]
-                  ? "text-white shadow-sm"
-                  : "bg-gray-100 text-gray-400"
-              }`}
-              style={visibleLines[key] ? { backgroundColor: color } : {}}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="space-y-5">
+      <h3 className="text-base font-bold text-gray-800 sm:text-lg">
+        Historial — <span className="font-mono text-farm-green-dark">{deviceId}</span>
+      </h3>
 
-      <div className="h-72 sm:h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={history} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis
-              dataKey="timestamp"
-              tickFormatter={formatTick}
-              tick={{ fontSize: 11, fill: "#9ca3af" }}
-              axisLine={{ stroke: "#e5e7eb" }}
-            />
-            <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={{ stroke: "#e5e7eb" }} />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            {LINES.map(({ key, color, label }) =>
-              visibleLines[key] ? (
-                <Line
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  name={label}
-                  stroke={color}
-                  strokeWidth={2}
-                  dot={{ r: 3, strokeWidth: 2 }}
-                  activeDot={{ r: 5 }}
-                />
-              ) : null
-            )}
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {CHARTS.map(({ key, label, unit, color, yDomain }) => (
+          <div key={key} className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-sm backdrop-blur-sm sm:p-5">
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-600">
+              {label}
+            </h4>
+            <div className="h-56 sm:h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={history} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="timestamp"
+                    tickFormatter={formatTick}
+                    tick={{ fontSize: 11, fill: "#9ca3af" }}
+                    axisLine={{ stroke: "#e5e7eb" }}
+                  />
+                  <YAxis
+                    domain={yDomain === "auto" ? undefined : yDomain}
+                    tick={{ fontSize: 11, fill: "#9ca3af" }}
+                    axisLine={{ stroke: "#e5e7eb" }}
+                  />
+                  <Tooltip content={<ChartTooltip unit={unit} />} />
+                  <Line
+                    type="monotone"
+                    dataKey={key}
+                    stroke={color}
+                    strokeWidth={2}
+                    dot={{ r: 2, strokeWidth: 1.5 }}
+                    activeDot={{ r: 4 }}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
