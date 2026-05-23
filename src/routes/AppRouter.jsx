@@ -13,12 +13,13 @@ import Config from "../modules/config/Config";
 import Alertas from "../modules/alertas/Alertas";
 import DeviceList from "../modules/devices/pages/DeviceList";
 import PrediccionesIA from "../modules/predicciones/PrediccionesIA";
+import NotFound from "../modules/error/NotFound";
 
 const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Login / Register: invitados; si ya hay sesión → /dashboard */}
+        {/* Login / Register: invitados; si ya hay sesión → /inventory */}
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -41,8 +42,8 @@ const AppRouter = () => {
           </Route>
         </Route>
 
-        {/* Redirección por defecto */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

@@ -14,6 +14,7 @@ const tipoStyling = {
 };
 
 export default function DeviceCard({ device, onClick }) {
+  if (!device) return null;
   const { device_id, nombre, tipo, estado, sensores, actuadores, last_seen } = device;
   const online = isOnline(last_seen);
   const style = tipoStyling[tipo] ?? { border: "border-gray-300", badge: "bg-gray-100 text-gray-700 ring-gray-300" };

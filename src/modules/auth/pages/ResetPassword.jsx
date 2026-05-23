@@ -21,11 +21,8 @@ const ResetPassword = () => {
 
     if (formData.newPassword !== formData.confirmPassword) {
       setError("Las contraseñas no coinciden.");
-      console.log("Reset password: contraseñas no coinciden");
       return;
     }
-
-    console.log("Reset password:", formData);
   };
 
   return (

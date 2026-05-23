@@ -31,7 +31,7 @@ const Login = () => {
         password: formData.password,
       });
       persistAuthSession(data);
-      navigate("/dashboard", { replace: true });
+      navigate("/inventory", { replace: true });
     } catch (err) {
       const data = err.response?.data;
       const message =

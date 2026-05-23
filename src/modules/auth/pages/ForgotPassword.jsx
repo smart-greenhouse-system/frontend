@@ -8,7 +8,6 @@ const ForgotPassword = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log("Forgot password request:", { email });
   };
 
   return (

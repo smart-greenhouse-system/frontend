@@ -19,6 +19,7 @@ const ESTADO_STYLING = {
   Estresada: { bg: "bg-amber-100", text: "text-amber-800", ring: "ring-amber-300", icon: AlertTriangle },
   Deficiente: { bg: "bg-orange-100", text: "text-orange-800", ring: "ring-orange-300", icon: AlertTriangle },
   Plaga: { bg: "bg-purple-100", text: "text-purple-800", ring: "ring-purple-300", icon: AlertTriangle },
+  Desconocido: { bg: "bg-gray-100", text: "text-gray-700", ring: "ring-gray-300", icon: AlertTriangle },
 };
 
 function formatConfianza(val) {
@@ -30,7 +31,7 @@ function mapEstado(estado) {
   if (!estado) return { label: "Desconocido", style: { bg: "bg-gray-100", text: "text-gray-700", ring: "ring-gray-300", icon: AlertTriangle } };
   const key = estado.toLowerCase();
   const label = ESTADO_PLANTA_MAP[key] ?? estado;
-  const style = ESTADO_STYLING[label] ?? ESTADO_STYLING["Desconocido"];
+  const style = ESTADO_STYLING[label] ?? ESTADO_STYLING.Desconocido;
   return { label, style };
 }
 

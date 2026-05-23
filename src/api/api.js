@@ -33,6 +33,7 @@ function attachTokenInterceptor(instance) {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('🚀 [Interceptor] Enviando Token:', token);
     return config;
   });
 }

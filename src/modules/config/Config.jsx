@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertCircle, CheckCircle2, Loader2, Save } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertCircle, CheckCircle2, Loader2, Save, Info, AlertTriangle } from "lucide-react";
 import { getConfig, updateConfig } from "../../lib/configApi";
 
 const Config = () => {
@@ -47,10 +47,25 @@ const Config = () => {
     setConfig((prev) => (prev ? { ...prev, [field]: value } : prev));
   }, []);
 
+  const validationErrors = useMemo(() => {
+    if (!config) return {};
+    const errs = {};
+    if (!config.nombre_invernadero || !config.nombre_invernadero.trim()) {
+      errs.nombre_invernadero = "El nombre del invernadero es obligatorio";
+    }
+    const freq = config.frecuencia_analisis_ia_min;
+    if (freq == null || freq < 1 || !Number.isFinite(freq)) {
+      errs.frecuencia_analisis_ia_min = "Debe ser un número mayor o igual a 1";
+    }
+    return errs;
+  }, [config]);
+
+  const isFormValid = Object.keys(validationErrors).length === 0;
+
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      if (!config) return;
+      if (!config || !isFormValid) return;
       setSaving(true);
       try {
         const updated = await updateConfig(config);
@@ -67,7 +82,7 @@ const Config = () => {
         if (mountedRef.current) setSaving(false);
       }
     },
-    [config]
+    [config, isFormValid]
   );
 
   return (
@@ -112,25 +127,47 @@ const Config = () => {
                   type="text"
                   value={config.nombre_invernadero ?? ""}
                   onChange={(e) => handleChange("nombre_invernadero", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-800 outline-none transition focus:border-farm-green focus:ring-2 focus:ring-farm-green/20"
+                  className={`w-full rounded-lg border px-4 py-2.5 text-gray-800 outline-none transition focus:ring-2 ${
+                    validationErrors.nombre_invernadero
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                      : "border-gray-300 focus:border-farm-green focus:ring-farm-green/20"
+                  }`}
                   placeholder="Ej. Invernadero Norte"
                 />
+                {validationErrors.nombre_invernadero && (
+                  <p className="mt-1 text-xs text-red-600">{validationErrors.nombre_invernadero}</p>
+                )}
               </div>
 
-              <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-                <input
-                  id="modo_automatico"
-                  type="checkbox"
-                  checked={config.modo_automatico === true}
-                  onChange={(e) => handleChange("modo_automatico", e.target.checked)}
-                  className="h-5 w-5 rounded border-gray-300 text-farm-green focus:ring-farm-green"
-                />
-                <label htmlFor="modo_automatico" className="text-sm font-medium text-gray-700">
-                  Modo automático
-                </label>
-                <span className="ml-auto text-xs text-gray-500">
-                  {config.modo_automatico ? "Activado" : "Desactivado"}
-                </span>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+                <div className="flex items-start gap-3">
+                  <input
+                    id="modo_automatico"
+                    type="checkbox"
+                    checked={config.modo_automatico === true}
+                    onChange={(e) => handleChange("modo_automatico", e.target.checked)}
+                    className="mt-0.5 h-5 w-5 rounded border-gray-300 text-farm-green focus:ring-farm-green"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <label htmlFor="modo_automatico" className="text-sm font-semibold text-gray-800">
+                      Modo automático
+                    </label>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      El sistema controlará los actuadores según las lecturas de sensores y predicciones IA.
+                    </p>
+                    {config.modo_automatico === true && (
+                      <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-100/60 px-3 py-2 text-xs font-medium text-amber-800">
+                        <AlertTriangle className="h-4 w-4 shrink-0" strokeWidth={2} />
+                        El control manual desde la sección Control podría estar restringido mientras el modo automático esté activo.
+                      </div>
+                    )}
+                  </div>
+                  <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${
+                    config.modo_automatico ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"
+                  }`}>
+                    {config.modo_automatico ? "Activado" : "Desactivado"}
+                  </span>
+                </div>
               </div>
 
               <div>
@@ -149,12 +186,20 @@ const Config = () => {
                   onChange={(e) =>
                     handleChange("frecuencia_analisis_ia_min", Number(e.target.value))
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-800 outline-none transition focus:border-farm-green focus:ring-2 focus:ring-farm-green/20"
+                  className={`w-full rounded-lg border px-4 py-2.5 text-gray-800 outline-none transition focus:ring-2 ${
+                    validationErrors.frecuencia_analisis_ia_min
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                      : "border-gray-300 focus:border-farm-green focus:ring-farm-green/20"
+                  }`}
                   placeholder="Ej. 30"
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Intervalo en minutos entre análisis automáticos con IA.
-                </p>
+                {validationErrors.frecuencia_analisis_ia_min ? (
+                  <p className="mt-1 text-xs text-red-600">{validationErrors.frecuencia_analisis_ia_min}</p>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Intervalo en minutos entre análisis automáticos con IA.
+                  </p>
+                )}
               </div>
 
               {feedback ? (
@@ -176,11 +221,17 @@ const Config = () => {
                 </div>
               ) : null}
 
-              <div className="flex justify-end pt-2">
+              <div className="flex items-center justify-between pt-2">
+                {!isFormValid && (
+                  <p className="flex items-center gap-1 text-xs text-red-600">
+                    <Info className="h-3.5 w-3.5" strokeWidth={2} />
+                    Corrige los errores antes de guardar
+                  </p>
+                )}
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 rounded-lg bg-farm-green-dark px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-farm-green disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={saving || !isFormValid}
+                  className="ml-auto inline-flex items-center gap-2 rounded-lg bg-farm-green-dark px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-farm-green disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {saving ? (
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

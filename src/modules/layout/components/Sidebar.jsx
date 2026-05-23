@@ -1,5 +1,4 @@
 import { NavLink } from "react-router-dom";
-// 1. IMPORTAMOS LA FUNCIÓN DE LOGOUT (Verifica que la ruta sea correcta según tu carpeta)
 import { logout } from "../../../api/authService"; 
 import {
   Boxes,
@@ -53,7 +52,6 @@ const SidebarLink = ({ to, label, Icon, collapsed = false, onNavigate }) => (
 
 const SidebarContent = ({ collapsed = false, onNavigate, onToggleCollapse, isMobile = false }) => {
   
-  // 2. CREAMOS LA FUNCIÓN QUE MANEJA EL CLICK
   const handleLogoutClick = () => {
     if (window.confirm("¿Estás seguro de que quieres cerrar sesión?")) {
       logout();
@@ -118,7 +116,7 @@ const SidebarContent = ({ collapsed = false, onNavigate, onToggleCollapse, isMob
         ))}
       </nav>
 
-      {/* 3. AÑADIMOS EL onClick AL BOTÓN DE CERRAR SESIÓN */}
+      
       <button
         type="button"
         onClick={handleLogoutClick}
