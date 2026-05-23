@@ -13,10 +13,12 @@ import {
   SlidersHorizontal,
   Bell,
   Settings,
+  Radio,
 } from "lucide-react";
 
 const mainLinks = [
   { to: "/monitoreo", label: "Monitoreo IoT", icon: Activity },
+  { to: "/dispositivos", label: "Dispositivos", icon: Radio },
   { to: "/control", label: "Control", icon: SlidersHorizontal },
   { to: "/alertas", label: "Alertas", icon: Bell },
   { to: "/inventory", label: "Inventario", icon: Boxes },

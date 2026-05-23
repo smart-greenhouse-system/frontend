@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Activity, Clock, Cpu, RefreshCw, Server, Wifi, WifiOff,
 } from "lucide-react";
@@ -16,15 +17,19 @@ const AUTO_REFRESH_MS = 10_000; // 10 seconds
 const MonitoreoIoT = () => {
   const mountedRef = useRef(true);
 
+  // --- Leer deviceId desde URL (?deviceId=XXX) ---
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlDeviceId = searchParams.get("deviceId") || null;
+
   // --- State: lecturas más recientes ---
-  const [readings, setReadings] = useState(null);     // array of device readings
+  const [readings, setReadings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
 
   // --- State: historial por dispositivo ---
-  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(urlDeviceId);
 
   // --- Cleanup ref ---
   useEffect(() => {
@@ -53,7 +58,9 @@ const MonitoreoIoT = () => {
 
       // Auto-select first device if none selected
       if (!selectedDeviceId && normalized.length > 0) {
-        setSelectedDeviceId(normalized[0].device_id);
+        const firstId = normalized[0].device_id;
+        setSelectedDeviceId(firstId);
+        setSearchParams({ deviceId: firstId }, { replace: true });
       }
     } catch (err) {
       if (!mountedRef.current) return;
@@ -164,7 +171,10 @@ const MonitoreoIoT = () => {
                 return (
                   <button
                     key={r.device_id}
-                    onClick={() => setSelectedDeviceId(r.device_id)}
+                    onClick={() => {
+                      setSelectedDeviceId(r.device_id);
+                      setSearchParams({ deviceId: r.device_id }, { replace: true });
+                    }}
                     className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                       isActive
                         ? "bg-farm-green-dark text-white shadow-md"
@@ -190,9 +200,9 @@ const MonitoreoIoT = () => {
                 <p className="text-sm font-bold text-gray-800">
                   Dispositivo: <span className="font-mono text-farm-green-dark">{currentDevice.device_id}</span>
                 </p>
-                {formattedTimestamp && (
-                  <p className="text-xs text-gray-500">Última lectura: {formattedTimestamp}</p>
-                )}
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  sensores: {Object.keys(currentDevice.sensores ?? {}).length} &middot; última lectura: {formattedTimestamp ?? "—"}
+                </p>
               </div>
               <div className="ml-auto">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800 ring-1 ring-green-300/60">

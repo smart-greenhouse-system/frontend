@@ -11,6 +11,7 @@ import MonitoreoIoT from "../modules/monitoreo/MonitoreoIoT";
 import Control from "../modules/control/Control";
 import Config from "../modules/config/Config";
 import Alertas from "../modules/alertas/Alertas";
+import DeviceList from "../modules/devices/pages/DeviceList";
 
 const AppRouter = () => {
   return (
@@ -31,6 +32,7 @@ const AppRouter = () => {
             <Route path="/" element={<Navigate to="/inventory" replace />} />
             <Route path="/inventory" element={<InventoryList />} />
             <Route path="/monitoreo" element={<MonitoreoIoT />} />
+            <Route path="/dispositivos" element={<DeviceList />} />
             <Route path="/control" element={<Control />} />
             <Route path="/config" element={<Config />} />
             <Route path="/alertas" element={<Alertas />} />
