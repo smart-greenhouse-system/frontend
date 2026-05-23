@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Bell,
@@ -7,11 +7,15 @@ import {
   Info,
   Loader2,
   OctagonAlert,
+  RefreshCw,
 } from "lucide-react";
-/**
- * Severidades de UI (M06 — alertas operativas).
- * Colores: info → azul, advertencia → ámbar, peligro → rojo.
- */
+import {
+  getActuatorEvents,
+  mapActuatorEventsToAlerts,
+} from "../../lib/actuatorEventsApi";
+
+const READ_STORAGE_KEY = "greenhouse_alerts_read";
+
 const SEVERITY_META = {
   info: {
     label: "Info",
@@ -36,79 +40,22 @@ const SEVERITY_META = {
   },
 };
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function loadReadIds() {
+  try {
+    const raw = localStorage.getItem(READ_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
 }
 
-/** Mock alineado conceptualmente con GET /api/v1/alerts (RF-23) y centro in-app (RF-33). */
-const MOCK_ALERTS_SEED = [
-  {
-    id: "alt_001",
-    severity: "peligro",
-    mensaje:
-      "Temperatura por encima del umbral crítico: ventilación recomendada de inmediato.",
-    dispositivo: "sensor_temp_01",
-    timestamp: "2026-05-03T14:22:00.000Z",
-    read: false,
-  },
-  {
-    id: "alt_002",
-    severity: "advertencia",
-    mensaje:
-      "Humedad del suelo por debajo del mínimo configurado (35 %). Revisar riego.",
-    dispositivo: "esp32_1",
-    timestamp: "2026-05-03T13:55:12.000Z",
-    read: false,
-  },
-  {
-    id: "alt_003",
-    severity: "info",
-    mensaje:
-      "Respaldo de lecturas completado correctamente en el almacenamiento local.",
-    dispositivo: "gateway_norte",
-    timestamp: "2026-05-03T13:40:00.000Z",
-    read: false,
-  },
-  {
-    id: "alt_004",
-    severity: "advertencia",
-    mensaje:
-      "Luz ambiental baja respecto al objetivo diurno; revisar toldo o lámparas.",
-    dispositivo: "esp32_2",
-    timestamp: "2026-05-03T12:18:45.000Z",
-    read: false,
-  },
-  {
-    id: "alt_005",
-    severity: "peligro",
-    mensaje:
-      "Fallo de confirmación MQTT en actuador de riego: comando no confirmado.",
-    dispositivo: "actuador_riego_A",
-    timestamp: "2026-05-03T11:05:30.000Z",
-    read: false,
-  },
-  {
-    id: "alt_006",
-    severity: "info",
-    mensaje:
-      "Modo automático activado para el invernadero «Norte» sin conflictos.",
-    dispositivo: "svc_control",
-    timestamp: "2026-05-03T09:30:00.000Z",
-    read: false,
-  },
-  {
-    id: "alt_007",
-    severity: "info",
-    mensaje: "Nueva versión de firmware disponible para el nodo esp32_1.",
-    dispositivo: "esp32_1",
-    timestamp: "2026-05-03T08:00:00.000Z",
-    read: false,
-  },
-];
+function saveReadIds(ids) {
+  localStorage.setItem(READ_STORAGE_KEY, JSON.stringify([...ids]));
+}
 
-async function fetchAlertsMock() {
-  await delay(520);
-  return MOCK_ALERTS_SEED.map((a) => ({ ...a }));
+function applyReadState(alerts, readIds) {
+  return alerts.map((a) => ({ ...a, read: readIds.has(a.id) }));
 }
 
 function formatTimestamp(iso) {
@@ -131,6 +78,7 @@ const FILTER_OPTIONS = [
 
 const Alertas = () => {
   const mountedRef = useRef(true);
+  const readIdsRef = useRef(loadReadIds());
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -144,45 +92,33 @@ const Alertas = () => {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await fetchAlertsMock();
-        if (cancelled || !mountedRef.current) {
-          return;
-        }
-        setAlerts(data);
-      } catch (err) {
-        if (cancelled || !mountedRef.current) {
-          return;
-        }
-        setError(
-          err instanceof Error
-            ? err.message
-            : "No se pudieron cargar las alertas."
-        );
-        setAlerts([]);
-      } finally {
-        if (!cancelled && mountedRef.current) {
-          setLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const loadAlerts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const events = await getActuatorEvents();
+      if (!mountedRef.current) return;
+
+      const mapped = mapActuatorEventsToAlerts(events);
+      setAlerts(applyReadState(mapped, readIdsRef.current));
+    } catch (err) {
+      if (!mountedRef.current) return;
+      setError(err?.message ?? "No se pudieron cargar los eventos.");
+      setAlerts([]);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadAlerts();
+  }, [loadAlerts]);
 
   const filteredAlerts = useMemo(() => {
     const sorted = [...alerts].sort(
       (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
     );
-    if (severityFilter === "all") {
-      return sorted;
-    }
+    if (severityFilter === "all") return sorted;
     return sorted.filter((a) => a.severity === severityFilter);
   }, [alerts, severityFilter]);
 
@@ -191,16 +127,20 @@ const Alertas = () => {
     [alerts]
   );
 
-  const markAsRead = async (id) => {
+  const markAsRead = (id) => {
     setMarkingId(id);
-    await delay(220);
-    if (!mountedRef.current) {
-      return;
-    }
+    readIdsRef.current.add(id);
+    saveReadIds(readIdsRef.current);
     setAlerts((prev) =>
       prev.map((a) => (a.id === id ? { ...a, read: true } : a))
     );
     setMarkingId(null);
+  };
+
+  const markAllAsRead = () => {
+    alerts.forEach((a) => readIdsRef.current.add(a.id));
+    saveReadIds(readIdsRef.current);
+    setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
   };
 
   return (
@@ -229,10 +169,19 @@ const Alertas = () => {
                   ) : null}
                 </div>
                 <p className="mt-1 text-sm text-farm-green-light/90">
-                  Monitoreo de eventos críticos del invernadero.
+                  Eventos de actuadores desde GET /api/actuator-events.
                 </p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={loadAlerts}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              Actualizar
+            </button>
           </div>
         </div>
 
@@ -244,6 +193,13 @@ const Alertas = () => {
             >
               <p className="font-medium">Error al cargar alertas</p>
               <p className="mt-1 text-red-700">{error}</p>
+              <button
+                type="button"
+                onClick={loadAlerts}
+                className="mt-3 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+              >
+                Reintentar
+              </button>
             </div>
           )}
 
@@ -254,7 +210,7 @@ const Alertas = () => {
                 aria-hidden
               />
               <p className="mt-4 text-sm font-medium text-gray-600">
-                Cargando alertas…
+                Cargando eventos…
               </p>
             </div>
           ) : (
@@ -284,17 +240,20 @@ const Alertas = () => {
               {filteredAlerts.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50/80 px-6 py-14 text-center">
                   <p className="text-sm font-medium text-gray-800">
-                    No hay alertas en esta categoría.
+                    {alerts.length === 0
+                      ? "No hay eventos registrados todavía."
+                      : "No hay alertas en esta categoría."}
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
-                    Prueba con otro filtro o espera a que el sistema genere
-                    nuevos avisos.
+                    Los eventos aparecen cuando el backend registra acciones en
+                    actuadores.
                   </p>
                 </div>
               ) : (
                 <ul className="space-y-3">
                   {filteredAlerts.map((alert) => {
-                    const meta = SEVERITY_META[alert.severity];
+                    const meta =
+                      SEVERITY_META[alert.severity] ?? SEVERITY_META.info;
                     const Icon = meta.Icon;
                     const isRead = alert.read;
                     const isMarking = markingId === alert.id;
@@ -305,9 +264,7 @@ const Alertas = () => {
                           className={[
                             "relative overflow-hidden rounded-2xl p-5 pl-5 transition-[box-shadow,opacity] duration-200 sm:p-6 sm:pl-6",
                             meta.rowClass,
-                            isRead
-                              ? "opacity-[0.34]"
-                              : "hover:shadow-md",
+                            isRead ? "opacity-[0.34]" : "hover:shadow-md",
                           ].join(" ")}
                         >
                           {!isRead ? (
@@ -386,19 +343,15 @@ const Alertas = () => {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <button
                     type="button"
-                    onClick={() => {
-                      setAlerts((prev) =>
-                        prev.map((a) => ({ ...a, read: true }))
-                      );
-                    }}
-                    className="w-full rounded-lg border border-farm-green/30 bg-white px-4 py-2.5 text-sm font-semibold text-farm-green-dark shadow-sm transition hover:bg-farm-green-light/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-farm-green/30 sm:w-auto"
+                    onClick={markAllAsRead}
+                    disabled={alerts.length === 0 || unreadCount === 0}
+                    className="w-full rounded-lg border border-farm-green/30 bg-white px-4 py-2.5 text-sm font-semibold text-farm-green-dark shadow-sm transition hover:bg-farm-green-light/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-farm-green/30 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                   >
                     Marcar todas como leídas
                   </button>
                   <p className="text-xs text-gray-500 sm:max-w-md sm:text-right">
-                    Orden: más recientes primero. Lista de ejemplo (mock) alineada
-                    con el módulo M06; conectar a la API real cuando esté
-                    disponible.
+                    Fuente: eventos de actuadores. La severidad se infiere del
+                    estado del evento; «leído» se guarda en este navegador.
                   </p>
                 </div>
               </div>

@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Activity, Clock, Cpu, RefreshCw, Server, Wifi, WifiOff,
-} from "lucide-react";
+import { Clock, Cpu, RefreshCw, Server, Wifi } from "lucide-react";
 import { getLatestReadings } from "../../lib/sensorApi";
 import SensorCard from "./components/SensorCard";
 import SensorHistoryChart from "./components/SensorHistoryChart";
 
 const SENSOR_KEYS = ["temperatura", "humedad_suelo", "humedad_relativa", "iluminacion"];
-const AUTO_REFRESH_MS = 10_000; // 10 seconds
+const AUTO_REFRESH_MS = 10_000;
 
-/* ─────────────────────────────────────────────────────────────
-   MonitoreoIoT — Dashboard de sensores con auto-refresh
-   ───────────────────────────────────────────────────────────── */
+/**
+ * MonitoreoIoT — Persona B / Módulo 08 Sensores (FRONTEND_MASTER_PLAN.md)
+ *
+ * Flujo de datos (sin fetch directo):
+ * 1. getLatestReadings() → objeto plano por dispositivo: { device_id, temperatura,
+ *    humedad_relativa, humedad_suelo, iluminacion, timestamp }
+ * 2. SensorHistoryChart usa getSensorHistory(deviceId) con el mismo formato por fila.
+ */
 
 const MonitoreoIoT = () => {
   const mountedRef = useRef(true);
@@ -42,22 +45,20 @@ const MonitoreoIoT = () => {
     }
 
     try {
-      const data = await getLatestReadings();
+      const normalized = await getLatestReadings();
       if (!mountedRef.current) return;
 
-      // Normalize: API may return an array or a single object
-      const normalized = Array.isArray(data) ? data : [data];
       setReadings(normalized);
       setLastUpdated(new Date());
       setError(null);
 
-      // Auto-select first device if none selected
-      if (!selectedDeviceId && normalized.length > 0) {
-        setSelectedDeviceId(normalized[0].device_id);
-      }
+      setSelectedDeviceId((prev) => {
+        if (prev && normalized.some((r) => r.device_id === prev)) return prev;
+        return normalized[0]?.device_id ?? null;
+      });
     } catch (err) {
       if (!mountedRef.current) return;
-      const msg = err?.response?.data?.message || err.message || "Error al cargar lecturas";
+      const msg = err?.message || "Error al cargar lecturas";
       if (!silent) {
         setError(msg);
         setReadings(null);
@@ -67,7 +68,7 @@ const MonitoreoIoT = () => {
       if (!mountedRef.current) return;
       silent ? setRefreshing(false) : setLoading(false);
     }
-  }, [selectedDeviceId]);
+  }, []);
 
   // --- Auto-refresh con cleanup ---
   useEffect(() => {
@@ -153,8 +154,16 @@ const MonitoreoIoT = () => {
         </div>
       )}
 
-      {/* ── DATA LOADED ── */}
-      {readings && (
+      {readings?.length === 0 && !loading && !error && (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-white/70 px-6 py-14 text-center">
+          <p className="text-sm font-medium text-gray-600">No hay lecturas de sensores disponibles.</p>
+          <p className="mt-1 text-xs text-gray-400">
+            Verifica que el backend esté enviando datos en GET /api/sensors/latest.
+          </p>
+        </div>
+      )}
+
+      {readings && readings.length > 0 && (
         <>
           {/* Device selector (if multiple) */}
           {readings.length > 1 && (

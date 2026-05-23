@@ -5,8 +5,10 @@ import Login from "../modules/auth/pages/Login";
 import Register from "../modules/auth/pages/Register";
 import ForgotPassword from "../modules/auth/pages/ForgotPassword";
 import ResetPassword from "../modules/auth/pages/ResetPassword";
+import DashboardHome from "../modules/dashboard/DashboardHome";
 import InventoryList from "../modules/inventory/pages/InventoryList";
 import DashboardLayout from "../modules/layout/DashboardLayout";
+import ResultadosIA from "../modules/ia/ResultadosIA";
 import MonitoreoIoT from "../modules/monitoreo/MonitoreoIoT";
 import Control from "../modules/control/Control";
 import Config from "../modules/config/Config";
@@ -28,7 +30,9 @@ const AppRouter = () => {
         {/* Rutas privadas: exigen token; luego layout del dashboard */}
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
-            <Route path="/" element={<Navigate to="/inventory" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardHome />} />
+            <Route path="/ia" element={<ResultadosIA />} />
             <Route path="/inventory" element={<InventoryList />} />
             <Route path="/monitoreo" element={<MonitoreoIoT />} />
             <Route path="/control" element={<Control />} />

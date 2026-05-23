@@ -33,9 +33,8 @@ const Login = () => {
       persistAuthSession(data);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      const data = err.response?.data;
       const message =
-        data?.message ||
+        err?.message ??
         (err.code === "ERR_NETWORK"
           ? "No se pudo conectar con el servidor. Verifica la URL del API."
           : "No se pudo iniciar sesión. Intenta de nuevo.");
@@ -49,10 +48,22 @@ const Login = () => {
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 py-10">
       <div className="w-full max-w-3xl rounded-2xl bg-white shadow-lg">
         <div className="rounded-t-2xl bg-farm-green px-8 py-6 text-white">
-          <h1 className="text-3xl font-semibold">Iniciar sesión</h1>
-          <p className="mt-1 text-sm text-farm-green-light/90">
-            Accede a tu panel para gestionar tu invernadero inteligente.
-          </p>
+          <div className="flex items-center gap-4">
+            <img
+              src="/assets/iconoGreenHouse.jpg"
+              alt=""
+              className="h-14 w-14 rounded-xl object-cover ring-2 ring-white/25"
+              width={56}
+              height={56}
+            />
+            <div>
+              <p className="text-sm font-medium text-farm-green-light/90">GreenHouse</p>
+              <h1 className="text-3xl font-semibold">Iniciar sesión</h1>
+              <p className="mt-1 text-sm text-farm-green-light/90">
+                Accede a tu panel para gestionar tu invernadero inteligente.
+              </p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 px-8 py-8">

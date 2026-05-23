@@ -1,4 +1,5 @@
-import { Menu, Sprout } from "lucide-react";
+import { Menu } from "lucide-react";
+import { ICON_SRC } from "../../../components/BrandLogo";
 
 const MobileNavbar = ({ onMenuClick }) => {
   return (
@@ -13,10 +14,14 @@ const MobileNavbar = ({ onMenuClick }) => {
       </button>
 
       <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-farm-green text-white">
-          <Sprout className="h-4 w-4" />
-        </span>
-        <p className="text-sm font-semibold text-farm-green-dark">SmartGreenHouse</p>
+        <img
+          src={ICON_SRC}
+          alt=""
+          className="h-8 w-8 rounded-lg object-cover ring-1 ring-farm-green/20"
+          width={32}
+          height={32}
+        />
+        <p className="text-sm font-semibold text-farm-green-dark">GreenHouse</p>
       </div>
     </header>
   );

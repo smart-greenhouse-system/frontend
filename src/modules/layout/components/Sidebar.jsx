@@ -1,36 +1,36 @@
 import { NavLink } from "react-router-dom";
 // 1. IMPORTAMOS LA FUNCIÓN DE LOGOUT (Verifica que la ruta sea correcta según tu carpeta)
 import { logout } from "../../../api/authService"; 
+import BrandLogo from "../../../components/BrandLogo";
 import {
   Boxes,
-  UsersRound,
   LogOut,
-  Sprout,
   X,
   PanelLeftClose,
   PanelLeftOpen,
   Activity,
+  LayoutDashboard,
   SlidersHorizontal,
   Bell,
   Settings,
+  Brain,
 } from "lucide-react";
 
 const mainLinks = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/monitoreo", label: "Monitoreo IoT", icon: Activity },
+  { to: "/ia", label: "Resultados IA", icon: Brain },
   { to: "/control", label: "Control", icon: SlidersHorizontal },
   { to: "/alertas", label: "Alertas", icon: Bell },
   { to: "/inventory", label: "Inventario", icon: Boxes },
 ];
 
-const secondaryLinks = [
-  { to: "/config", label: "Configuración", icon: Settings },
-  { to: "/users", label: "Usuarios", icon: UsersRound },
-];
+const secondaryLinks = [{ to: "/config", label: "Configuración", icon: Settings }];
 
 const SidebarLink = ({ to, label, Icon, collapsed = false, onNavigate }) => (
   <NavLink
     to={to}
-    end={to === "/inventory"}
+    end={to === "/dashboard" || to === "/inventory"}
     onClick={onNavigate}
     className={({ isActive }) =>
       [
@@ -58,15 +58,11 @@ const SidebarContent = ({ collapsed = false, onNavigate, onToggleCollapse, isMob
 
   return (
     <>
-      <div className="mb-5 flex items-center gap-3 rounded-xl bg-farm-green/40 px-3 py-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-farm-green text-white">
-          <Sprout className="h-5 w-5" />
-        </span>
-        {!collapsed && (
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">SmartGreenHouse</p>
-            <p className="truncate text-xs text-farm-green-light/80">M08 Layout</p>
-          </div>
+      <div className="mb-5 rounded-xl bg-farm-green/40 px-3 py-3">
+        {!collapsed ? (
+          <BrandLogo subtitle="Panel operador" />
+        ) : (
+          <BrandLogo size="sm" showText={false} />
         )}
 
         {!isMobile ? (

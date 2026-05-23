@@ -55,16 +55,15 @@ export default function SensorHistoryChart({ deviceId }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await getSensorHistory(deviceId);
+      const rows = await getSensorHistory(deviceId);
       if (!mountedRef.current) return;
-      const rows = Array.isArray(data) ? data : data?.readings ?? data?.data ?? [];
       const sorted = [...rows].sort(
         (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
       );
       setHistory(sorted);
     } catch (err) {
       if (!mountedRef.current) return;
-      setError(err?.response?.data?.message || err.message || "Error al cargar historial");
+      setError(err?.message || "Error al cargar historial");
     } finally {
       if (mountedRef.current) setLoading(false);
     }
