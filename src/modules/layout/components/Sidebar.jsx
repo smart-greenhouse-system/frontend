@@ -2,7 +2,6 @@ import { NavLink } from "react-router-dom";
 import { logout } from "../../../api/authService"; 
 import {
   Boxes,
-  UsersRound,
   LogOut,
   Sprout,
   X,
@@ -27,7 +26,6 @@ const mainLinks = [
 
 const secondaryLinks = [
   { to: "/config", label: "Configuración", icon: Settings },
-  { to: "/users", label: "Usuarios", icon: UsersRound },
 ];
 
 const SidebarLink = ({ to, label, Icon, collapsed = false, onNavigate }) => (
