@@ -12,6 +12,7 @@ import Control from "../modules/control/Control";
 import Config from "../modules/config/Config";
 import Alertas from "../modules/alertas/Alertas";
 import DeviceList from "../modules/devices/pages/DeviceList";
+import PrediccionesIA from "../modules/predicciones/PrediccionesIA";
 
 const AppRouter = () => {
   return (
@@ -34,6 +35,7 @@ const AppRouter = () => {
             <Route path="/monitoreo" element={<MonitoreoIoT />} />
             <Route path="/dispositivos" element={<DeviceList />} />
             <Route path="/control" element={<Control />} />
+            <Route path="/predicciones" element={<PrediccionesIA />} />
             <Route path="/config" element={<Config />} />
             <Route path="/alertas" element={<Alertas />} />
           </Route>
