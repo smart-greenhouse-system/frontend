@@ -1,205 +1,205 @@
-# Smart Greenhouse — Frontend
+# SmartGreenHouse — Frontend
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Lucide](https://img.shields.io/badge/Lucide_React-icons-000000?logo=lucide&logoColor=white)](https://lucide.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Axios](https://img.shields.io/badge/Axios-1.16-5A29E4?logo=axios&logoColor=white)](https://axios-http.com/)
 [![React Router](https://img.shields.io/badge/React_Router-7-CA4245?logo=react-router&logoColor=white)](https://reactrouter.com/)
+[![Recharts](https://img.shields.io/badge/Recharts-3.8-22B5BF?logo=recharts&logoColor=white)](https://recharts.org/)
 
-**Smart Greenhouse** es el panel web para operadores de invernaderos inteligentes: monitoreo, inventario, consumo de recursos, histórico de cultivos y reportes, con una interfaz clara y **mobile-first** para uso en campo.
-
-La especificación funcional y los contratos de API viven en **`FRONTEND_MASTER_PLAN.md`**.
-
----
-
-## Stack tecnológico
-
-| Tecnología | Rol en el proyecto |
-| :--- | :--- |
-| **React 19** | UI declarativa y componentes reutilizables |
-| **Vite** | Dev server rápido, HMR y build de producción |
-| **Tailwind CSS v4** | Estilos con `@theme` y tokens de color (`farm-green`, etc.) |
-| **Lucide React** | Iconografía consistente (sidebar, KPIs, acciones) |
-| **React Router** | Rutas públicas (auth) y área privada con layout |
+Panel web para operadores de invernaderos inteligentes. Consume 20 endpoints REST de un backend Java Spring Boot con arquitectura hexagonal. Incluye monitoreo IoT en tiempo real, control de actuadores, análisis predictivo con IA, inventario de insumos y configuración del invernadero — todo sincronizado con una API real sin datos mock.
 
 ---
 
-## Requisitos previos
+## Arquitectura del Sistema
 
-- **Node.js** LTS (recomendado 20+)
-- **npm** (incluido con Node)
+```
+┌─────────────────────────────────────────────────────────┐
+│                     Frontend                             │
+│  React 19 · Vite 8 · Tailwind v4 · Recharts 3.8        │
+│                                                         │
+│  ┌──────────┐  ┌──────────┐  ┌────────┐  ┌──────────┐ │
+│  │ Auth     │  │ Lib/     │  │ UI Kit │  │ Modules/ │ │
+│  │ Guards   │  │ (7 APIs) │  │ Atoms  │  │  7 mod.  │ │
+│  └────┬─────┘  └────┬─────┘  └────────┘  └────┬─────┘ │
+│       └─────────────┼─────────────────────────┘       │
+│                     │ Axios                            │
+│              ┌──────┴──────┐                           │
+│              │ Interceptor │                           │
+│              │ JWT Bearer  │                           │
+│              └──────┬──────┘                           │
+└─────────────────────┼───────────────────────────────────┘
+                      │ HTTPS
+             ┌────────┴────────────┐
+             │  Backend (Render)   │
+             │  Spring Boot 3 +    │
+             │  JPA + MongoDB      │
+             └─────────────────────┘
+```
+
+Cada módulo del frontend está **espejado 1:1** con un controlador Java del backend. Los DTOs JavaScript (`@typedef`) reflejan exactamente los campos de los `*Response.java`, garantizando que el contrato de datos sea idéntico en ambas capas.
 
 ---
 
-## Instalación y ejecución
+## Stack Tecnológico
+
+| Tecnología | Versión | Propósito |
+|---|---|---|
+| **React** | 19 | UI declarativa y componentes reutilizables |
+| **Vite** | 8 | Dev server con HMR y build de producción |
+| **Tailwind CSS** | 4 | Estilos utilitarios con tokens de color personalizados |
+| **Axios** | 1.16 | Cliente HTTP con interceptores de petición/respuesta |
+| **React Router** | 7 | Enrutamiento declarativo con layout anidado y guards |
+| **Recharts** | 3.8 | Gráficas de líneas para historial de sensores (4 independientes) |
+| **Lucide React** | 1.14 | Iconografía consistente en sidebar, tarjetas y acciones |
+
+---
+
+## Seguridad y Autenticación
+
+El flujo de seguridad está centralizado en `src/api/api.js` y `src/api/authService.js`:
+
+1. **Login**: `POST /auth/login` devuelve `{ accessToken, tokenType, expiresIn }`.
+2. **Persistencia**: `persistAuthSession()` normaliza el campo `accessToken` a la clave `"token"` en `localStorage`.
+3. **Interceptor de petición**: Cada request inyecta automáticamente `Authorization: Bearer <token>` vía Axios interceptor.
+4. **Interceptor de respuesta**: Si el backend responde con `401`, se limpia la sesión y se redirige a `/login`.
+5. **Route Guards**:
+   - `ProtectedRoute`: bloquea el acceso al dashboard si no hay token.
+   - `GuestRoute`: redirige a `/inventory` si el usuario ya tiene sesión activa.
+
+---
+
+## Arquitectura de Sensores (Map<String, Double>)
+
+El backend almacena las lecturas de sensores en un `Map<String, Double>` dinámico — no hay campos fijos. El frontend normaliza estas keys mediante `KEY_ALIASES` en `src/lib/sensorApi.js`, que mapea múltiples nombres posibles (ej. `"temperature"`, `"temp"`) a 4 variables canónicas:
+
+| Variable | Unidad | Alias aceptados |
+|---|---|---|
+| `temperatura` | °C | temperatura, temperature, temp |
+| `humedad_relativa` | % | humedad_relativa, humedad, humedad_aire, hr, humidity |
+| `humedad_suelo` | % | humedad_suelo, soil_moisture, humidity_soil, hum_suelo, moisture |
+| `iluminacion` | lux | iluminacion, luz, light, illuminance, lux |
+
+**Polling**: El dashboard de Monitoreo IoT refresca lecturas cada 15 segundos con un indicador visual sutil (punto pulsante + "Actualizando…"), sin recargar la interfaz completa. Cada variable tiene su propia gráfica de historial en un grid 2×2 con eje Y independiente (0–50 °C, 0–100 %, 0–100 %, auto), permitiendo ver tendencias sin que las diferentes escalas opaque los movimientos.
+
+Si un dispositivo MQTT envía una variable no contemplada, el backend la almacena y el frontend la ignora hasta que se agregue su alias a `KEY_ALIASES`. El sistema es **agnóstico al nombre de la variable**.
+
+---
+
+## Módulos Funcionales
+
+| Módulo | Ruta | Descripción | Endpoints principales |
+|---|---|---|---|
+| Monitoreo IoT | `/monitoreo` | Sensores en tiempo real con polling 15s, selector de dispositivo, barra de info con estado online/offline, actuadores asociados, 4 gráficas de historial independientes | `GET /api/sensors/latest`, `GET /api/sensors/history/{id}`, `GET /api/devices`, `GET /api/actuators` |
+| Dispositivos | `/dispositivos` | Catálogo de dispositivos con buscador, indicador online (< 5 min), conteo de sensores/actuadores asociados | `GET /api/devices` |
+| Control | `/control` | CRUD completo de actuadores, selector de dispositivo, ejecución ON/OFF con indicador de resultado, pestaña de historial de eventos por dispositivo | `GET /api/actuators`, `POST /api/actuators`, `PATCH /api/actuators/{id}`, `DELETE /api/actuators/{id}`, `POST /api/actuators/execute`, `GET /api/actuator-events/{deviceId}` |
+| Predicciones IA | `/predicciones` | Último análisis destacado, historial en grid, formulario de predicción con selección de dispositivo y actuador | `GET /api/predictions/latest-image-analysis`, `GET /api/predictions/image-analysis`, `POST /api/predictions` |
+| Alertas | `/alertas` | Historial de eventos de actuadores con filtros por severidad y origen, persistencia de leídas en localStorage | `GET /api/actuator-events` |
+| Inventario | `/inventory` | CRUD de insumos con buscador, indicador de stock bajo, umbral mínimo configurable | `GET /api/inventory`, `POST /api/inventory`, `PATCH /api/inventory/{id}` |
+| Configuración | `/config` | Nombre del invernadero, modo automático (con advertencia visual), frecuencia de análisis IA | `GET /api/config`, `PATCH /api/config` |
+
+**Rutas públicas**: `/login`, `/register`, `/forgot-password`, `/reset-password`.  
+**Ruta catch-all**: `*` → página 404 personalizada con enlace de retorno al dashboard.
+
+---
+
+## Estructura del Proyecto (`src/`)
+
+```
+src/
+├── api/                        # Cliente Axios con interceptores JWT
+│   ├── api.js                  # Instancia axios, interceptores, normalizeError
+│   └── authService.js          # login, register, logout, persistAuthSession
+├── lib/                        # 7 módulos API (uno por dominio backend)
+│   ├── actuatorApi.js          # Actuators CRUD + execute + events
+│   ├── configApi.js            # Configuración del invernadero
+│   ├── deviceApi.js            # Catálogo de dispositivos
+│   ├── eventoApi.js            # Eventos de actuadores (fuente de alertas)
+│   ├── inventoryApi.js         # Inventario de insumos
+│   ├── predictionApi.js        # Predicciones y análisis IA
+│   └── sensorApi.js            # Lecturas de sensores + normalización
+├── modules/                    # Módulos funcionales
+│   ├── auth/pages/             # Login, Register, ForgotPassword, ResetPassword
+│   ├── monitoreo/              # MonitoreoIoT, SensorCard, SensorHistoryChart
+│   ├── devices/pages/          # DeviceList
+│   ├── devices/components/     # DeviceCard
+│   ├── control/                # Control (CRUD + ejecución + historial)
+│   ├── predicciones/           # PrediccionesIA, AnalysisCard
+│   ├── alertas/                # Alertas (eventos de actuadores)
+│   ├── inventory/pages/        # InventoryList
+│   ├── config/                 # Configuración del invernadero
+│   ├── layout/components/      # Sidebar, DashboardLayout, MobileNavbar
+│   └── error/                  # NotFound (página 404)
+├── components/                 # UI Kit atómico
+│   └── ui/                     # Button, Input, Modal
+├── routes/
+│   └── AppRouter.jsx           # Definición de todas las rutas
+├── App.jsx                     # Punto de entrada de la aplicación
+└── main.jsx                    # Mount point de React
+```
+
+---
+
+## Instalación y Configuración
+
+### Requisitos
+
+- **Node.js** 20+ (LTS recomendado)
+- **npm** (incluido con Node.js)
+
+### Pasos
 
 ```bash
-# 1. Clonar el repositorio (ajusta la URL a tu remoto)
-git clone https://github.com/TU_USUARIO/TU_REPO.git
-cd TU_REPO/frontend
+# 1. Clonar el repositorio
+git clone <url-del-repositorio>
+cd frontend
 
 # 2. Instalar dependencias
 npm install
 
-# 3. Levantar entorno de desarrollo
-npm run dev
+# 3. Configurar variable de entorno
+echo "VITE_API_URL=https://smart-greenhouse-backend-ec00.onrender.com" > .env
 ```
 
-Abre la URL que muestre la terminal (por defecto suele ser `http://localhost:5173`).
+> **⚠️ El backend está alojado en una instancia gratuita de Render.** En el primer request tras un período de inactividad, el servidor tarda aproximadamente **60 segundos en "despertar"**. Las peticiones posteriores responden en tiempo real.
 
-**Scripts útiles**
+### Scripts disponibles
 
 | Comando | Descripción |
-| :--- | :--- |
-| `npm run dev` | Servidor de desarrollo con HMR |
+|---|---|
+| `npm run dev` | Servidor de desarrollo con HMR (http://localhost:5173) |
 | `npm run build` | Build de producción en `dist/` |
 | `npm run preview` | Previsualizar el build localmente |
 | `npm run lint` | Ejecutar ESLint |
 
 ---
 
-## Mapa de rutas (integración en `AppRouter`)
+## Sincronización Backend-Frontend
 
-Todas las rutas privadas comparten **`DashboardLayout`** (sidebar responsive, navegación móvil). Las públicas son pantallas de autenticación sin layout.
+Cada archivo en `src/lib/` se corresponde 1:1 con un controlador Java del backend:
 
-### Rutas públicas (M01 — Autenticación)
+| Archivo frontend | Controller Java | Endpoint base |
+|---|---|---|
+| `sensorApi.js` | `SensorController.java` | `/api/sensors` |
+| `deviceApi.js` | `DeviceController.java` | `/api/devices` |
+| `actuatorApi.js` | `ActuatorController.java` + `ActuatorEventController.java` | `/api/actuators` |
+| `predictionApi.js` | `PredictionController.java` | `/api/predictions` |
+| `inventoryApi.js` | `InventoryController.java` | `/api/inventory` |
+| `configApi.js` | `GreenhouseConfigController.java` | `/api/config` |
+| `eventoApi.js` | `ActuatorEventController.java` | `/api/actuator-events` |
+| `authService.js` | `AuthController.java` | `/auth` |
 
-| Ruta | Descripción |
-| :--- | :--- |
-| `/login` | Inicio de sesión (JWT). |
-| `/register` | Registro de operador. |
-| `/forgot-password` | Solicitud de recuperación de contraseña. |
-| `/reset-password` | Restablecimiento de contraseña con token. |
-
-### Área privada — Dashboard e inventario (M05 / cultivos)
-
-| Ruta | Descripción |
-| :--- | :--- |
-| `/dashboard` | Home del panel: KPIs responsive, **panel de IA** (`AIInsightsPanel`: confianza, estado de planta, tiempo hasta cosecha vía `fetchHarvestEstimation` con fallback demo), **banner de estado** dinámico (`StatusBanner` según alertas e insumos bajos), últimos movimientos de inventario. |
-| `/inventory` | Listado principal de inventario (insumos y existencias). |
-| `/inventory/crops` | Gestión de cultivos: notas de operador, registro de cosecha y flujos asociados (RF-25 / RF-27). |
-| `/inventory/harvest-estimation` | **Módulo de IA — Cosecha estimada (RF-26):** tabla de cultivos activos (demo o enlazada a datos), detalle por cultivo, madurez, fuente de estimación (`source`) y acción **Actualizar estimación**; contratos ampliados de IA en `FRONTEND_MASTER_PLAN.md` (secciones C y D). |
-| `/inventory/consumption` | Consumo de recursos (agua, energía, insumos) por periodo o cultivo. |
-| `/inventory/history` | Histórico de cultivos y ciclos anteriores. |
-| `/inventory/reports` | Reportes exportables / vistas analíticas del inventario y producción. |
-
-### Área privada — IoT (M02 / M03) y alertas
-
-| Ruta | Descripción |
-| :--- | :--- |
-| `/monitoreo` | **M02 — Monitoreo IoT:** lecturas de sensores, tendencias y estado del invernadero (integración de UI; datos pueden provenir de mocks hasta conectar `GET /api/sensors/data` según plan). |
-| `/control` | **M03 — Control IoT:** acciones sobre actuadores (riego, ventilación, etc.); UI integrada (envío real según `POST /api/actuators/control` en el plan). |
-| `/alertas` | Alertas del sistema: listado filtrable, severidades y preferencias de notificación (RF-23 / RF-24, persistencia vía RF-34 en API). |
+Los tipos JSDoc (`@typedef`) replican exactamente los campos de los DTOs Java (`@JsonProperty`), asegurando que cualquier cambio en el backend se refleje como error de tipo en el frontend durante el desarrollo.
 
 ---
 
-## Estructura del proyecto (`src/`)
+## Documentación Adicional
 
-El código está organizado por **módulos** bajo `src/modules/`, alineados con **MO1–MO8** del master plan.
-
-| Ruta en disco | Contenido |
-| :--- | :--- |
-| **`src/modules/auth/`** | **M01:** login, registro, recuperación y restablecimiento de contraseña |
-| **`src/modules/monitoreo/`** | **M02:** vista de monitoreo IoT |
-| **`src/modules/control/`** | **M03:** panel de control de actuadores |
-| **`src/modules/inventory/`** | **M05:** inventario, consumo, histórico, reportes, cultivos y cosecha estimada |
-| **`src/modules/alertas/`** | Alertas y preferencias (RF-23 / RF-24) |
-| **`src/modules/layout/`** | **M08:** `DashboardLayout`, `Sidebar`, `MobileNavbar` |
-| **`src/routes/`** | `AppRouter.jsx`: rutas públicas y privadas |
-| **`src/lib/`** | Clientes HTTP por dominio (`alertsApi`, `cropApi`, `harvestEstimationApi`) |
-| **`src/components/ui/`** | Kit de UI atómico (siguiente sección) |
-
----
-
-## Kit de componentes UI (`src/components/ui/`)
-
-Piezas reutilizables para mantener consistencia visual y comportamiento en formularios y flujos modales.
-
-| Componente | Descripción |
-| :--- | :--- |
-| **`Button.jsx`** | Botón accesible con estilo primario (`farm-green-dark`), hover y anillo de foco; acepta `className` para variantes secundarias o ancho auto sin perder tokens del tema. |
-| **`Input.jsx`** | Campo de formulario con `label` opcional, soporte de `error` (borde y anillo rojo), estados de foco con anillo verde y tipografía legible en móvil. |
-| **`Modal.jsx`** | Diálogo modal (`role="dialog"`, `aria-modal`), overlay semitransparente, cierre al pulsar fuera o con icono **X** (Lucide), contenedor `max-w-2xl` y márgenes laterales para pantallas pequeñas. |
-| **`AIInsightsPanel.jsx`** | Resumen de IA en dashboard: barra de confianza (%), badge de estado de planta (saludable / riesgo / crítico) y tiempo estimado hasta cosecha. Consume `GET …/harvest-estimation` (`fetchHarvestEstimation`); si no hay API o falla la petición, muestra datos demo coherentes. Skeleton de carga (tres bloques `animate-pulse`). Expone `onLoadingChange` para coordinar el skeleton del banner. |
-| **`StatusBanner.jsx`** | Banner de **estado general** del invernadero según KPIs: **OK** (verde, sin alertas ni insumos bajos), **Alerta** (ámbar, ≥1 alerta o ≥1 insumo bajo), **Crítico** (rojo, más de 3 alertas activas). Iconos Lucide: `CheckCircle`, `TriangleAlert`, `XCircle`. |
-
-### Dashboard y Monitoreo IoT (última revisión UI/UX)
-
-- **`DashboardHome.jsx`:** grid de KPIs `1 / 2 / 4` columnas (móvil / tablet / desktop), valores grandes `text-xl sm:text-2xl`, integración de `AIInsightsPanel` entre KPIs y el banner, skeleton de ancho completo (`h-10`) para el `StatusBanner` mientras el panel de IA termina de cargar.
-- **`MonitoreoIoT.jsx`:** spinner centrado solo en la **primera carga** (`data === null` durante el mock con delay ~650 ms); en **polling** solo indicador sutil (punto con `animate-ping` + “Actualizando…”). Ajustes responsive en cabecera, paddings y tipografía de métricas.
-
----
-
-## Estado del proyecto
-
-| Módulo (plan) | Alcance en frontend | Estado |
-| :--- | :--- | :--- |
-| **M01 — Autenticación** | Login, Registro, Guards e Infraestructura JWT | 100% |
-| **M02 — Monitoreo IoT** | Vista de sensores integrada | UI Lista / Datos Mock + carga inicial (spinner) y refresco en segundo plano |
-| **M03 — Control IoT** | Panel de actuadores integrado | UI Lista / Datos Mock |
-| **M05 — Inventario** | Inventario, Consumo, Histórico y Cosecha Estimada | 100% |
-| **M08 — Dashboard y UX** | Shell principal, Sidebar, Responsive, home con IA y banner de estado | 100% |
-
-- **Datos:** parte de las pantallas IoT y de demostración usan **mocks** locales; los endpoints reales deben respetar `FRONTEND_MASTER_PLAN.md`. La variable de entorno **`VITE_API_BASE_URL`** (sin barra final) es la base usada por `src/lib/*` para llamadas HTTP.
-
----
-
-## API & Endpoints (IA)
-
-Contratos del **módulo IA** en `FRONTEND_MASTER_PLAN.md` (secciones C y D), coincidentes con el desglose funcional del equipo. La ruta **`/inventory/harvest-estimation`** cubre RF-26 y es el punto de entrada en UI para estimación de cosecha; el cliente **`fetchHarvestEstimation`** en `src/lib/harvestEstimationApi.js` consume el endpoint REST de estimación por cultivo.
-
-### Predicción ambiental y estado de planta
-
-| Método | Endpoint | Propósito | Cuerpo / respuesta (resumen) |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/ia/predictions` | Predicciones ambientales y avisos textuales | JSON con `predicciones` (p. ej. temperatura, humedad relativa), `alerta`, `timestamp` (ver plan). |
-| `GET` | `/api/ia/growth` | Estado de planta vía IA | JSON con `estado_planta` (p. ej. `saludable`, otros valores acordados con backend), `timestamp`. |
-
-### Estimación de cosecha (RF-26, cliente en `src/lib`)
-
-| Método | Endpoint | Cliente |
-| :--- | :--- | :--- |
-| `GET` | `/api/v1/crops/{crop_id}/harvest-estimation` | `fetchHarvestEstimation` en `harvestEstimationApi.js` |
-
-**Nota:** Las rutas `/api/ia/predictions` y `/api/ia/growth` están **especificadas en el master plan** como contrato de capa IA; en esta revisión **no** hay módulos dedicados en `src/lib/` que las encapsulen (la pantalla de cosecha estimada se apoya en el GET de harvest-estimation y datos demo cuando no hay backend). Para alertas, notas, cosecha y preferencias, ver `alertsApi.js` y `cropApi.js`.
-
----
-
-
-## 🚀 Desarrollo y Pruebas (Modo Mock)
-
-Actualmente, el sistema de autenticación y peticiones se encuentra en **Modo Mock**. Esto permite al equipo de desarrollo trabajar en sus módulos sin dependencia directa del Backend.
-
-### Credenciales de acceso de prueba:
-| Usuario | Contraseña | Rol |
-| :--- | :--- | :--- |
-| `admin@admin.com` | `Admin123*` | Administrador (Mock) |
-
-> **Nota:** Al ingresar estas credenciales, el sistema generará un token JWT simulado y permitirá el acceso a todas las rutas protegidas.
-
-## 🛡️ Infraestructura y Seguridad
-
-Se ha implementado una arquitectura de datos robusta para asegurar la integridad de la información y la sesión del usuario:
-
-- **Cliente API (Axios):** Centralizado en `src/api/api.js`.
-  - **Interceptor de Petición:** Inyecta automáticamente el Token JWT en los headers (`Authorization: Bearer <token>`).
-  - **Interceptor de Respuesta:** Detecta errores `401 Unauthorized` para limpiar la sesión y redirigir al login automáticamente.
-- **Route Guards:**
-  - **`ProtectedRoute`:** Bloquea el acceso al Dashboard si no existe una sesión activa.
-  - **`GuestRoute`:** Evita que usuarios ya logueados accedan a las páginas de Login o Registro.
-- **Persistencia:** Gestión automática de `access_token` y `refresh_token` en el `localStorage`.
-
-
-
-
-## Documentación adicional
-
-- **`FRONTEND_MASTER_PLAN.md`**: requerimientos por RF, vistas, reglas y endpoints esperados.
+- **`FRONTEND_MASTER_PLAN.md`**: Contrato oficial de datos por módulo, especificación de endpoints, estructura de errores y estrategia de migración.
 
 ---
 
 <p align="center">
-  <b>Smart Greenhouse — Frontend</b><br/>
-  <sub>Panel operativo para invernaderos inteligentes</sub>
+  <b>SmartGreenHouse — Frontend</b><br/>
+  <sub>Panel operativo para invernaderos inteligentes con React y Java Spring Boot</sub>
 </p>
-
