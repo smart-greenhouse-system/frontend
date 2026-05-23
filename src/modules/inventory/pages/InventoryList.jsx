@@ -6,79 +6,31 @@ import Modal from "../../../components/ui/Modal";
 import RecommendedActionsPanel from "../../../components/ui/RecommendedActionsPanel";
 import {
   createInventoryItem,
-  deactivateInventoryItem,
   getInventory,
   updateInventoryItem,
 } from "../../../lib/inventoryApi";
 
 const EMPTY_FORM = {
   nombre: "",
-  categoria: "",
-  stock_actual: "",
+  cantidad: "",
   unidad: "",
-  stock_minimo: "",
+  threshold_minimo: "",
 };
 
-const CATEGORY_OPTIONS = [
-  { value: "insumo", label: "Insumo" },
-  { value: "herramienta", label: "Herramienta" },
-  { value: "semilla", label: "Semilla" },
-  { value: "otro", label: "Otro" },
-];
-
-const UNIT_OPTIONS = ["kg", "L", "unidades", "paquetes", "sacos"];
-
-function isLowStock(item) {
-  if (item.stock_minimo == null || Number.isNaN(item.stock_minimo)) return false;
-  return item.stock <= item.stock_minimo;
-}
-
-const InventoryList = () => {
-  const [search, setSearch] = useState("");
-  const [inventory, setInventory] = useState([]);
-  const [loadStatus, setLoadStatus] = useState("loading");
-  const [loadError, setLoadError] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [formErrors, setFormErrors] = useState({});
-  const [saving, setSaving] = useState(false);
-
-  const loadInventory = useCallback(async () => {
-    setLoadStatus("loading");
-    setLoadError("");
-    try {
-      const items = await getInventory();
-      setInventory(items);
-      setLoadStatus("success");
-    } catch (err) {
-      setLoadError(
-        err.response?.data?.message || err.message || "No se pudo cargar el inventario."
-      );
-      setInventory([]);
-      setLoadStatus("error");
-    }
-  }, []);
-
-  useEffect(() => {
-    loadInventory();
-  }, [loadInventory]);
-
-  const openCreateModal = () => {
-    setEditingId(null);
-    setForm(EMPTY_FORM);
-    setFormErrors({});
-    setIsModalOpen(true);
-  };
+const EMPTY_FORM = {
+  nombre: "",
+  cantidad: "",
+  unidad: "",
+  threshold_minimo: "",
+};
 
   const openEditModal = (item) => {
     setEditingId(item.id);
     setForm({
       nombre: item.nombre,
-      categoria: item.categoria.toLowerCase(),
-      stock_actual: String(item.stock),
+      cantidad: String(item.cantidad),
       unidad: item.unidad,
-      stock_minimo: item.stock_minimo != null ? String(item.stock_minimo) : "",
+      threshold_minimo: item.threshold_minimo != null ? String(item.threshold_minimo) : "",
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -93,13 +45,12 @@ const InventoryList = () => {
   const validateForm = () => {
     const errors = {};
     if (!form.nombre.trim()) errors.nombre = "El nombre es obligatorio.";
-    if (!form.categoria) errors.categoria = "La categoría es obligatoria.";
-    if (form.stock_actual === "" || Number(form.stock_actual) < 0) {
-      errors.stock_actual = "Indica un stock válido (≥ 0).";
+    if (form.cantidad === "" || Number(form.cantidad) < 0) {
+      errors.cantidad = "Indica una cantidad válida (≥ 0).";
     }
     if (!form.unidad) errors.unidad = "La unidad es obligatoria.";
-    if (form.stock_minimo !== "" && Number(form.stock_minimo) < 0) {
-      errors.stock_minimo = "El mínimo debe ser ≥ 0.";
+    if (form.threshold_minimo !== "" && Number(form.threshold_minimo) < 0) {
+      errors.threshold_minimo = "El mínimo debe ser ≥ 0.";
     }
     return errors;
   };
@@ -107,12 +58,11 @@ const InventoryList = () => {
   const buildApiPayload = () => {
     const payload = {
       nombre: form.nombre.trim(),
-      categoria: form.categoria,
-      stock_actual: Number(form.stock_actual),
+      cantidad: Number(form.cantidad || form.stock_actual || 0),
       unidad: form.unidad,
     };
-    if (form.stock_minimo !== "") {
-      payload.stock_minimo = Number(form.stock_minimo);
+    if ((form.threshold_minimo ?? form.stock_minimo) !== "") {
+      payload.threshold_minimo = Number(form.threshold_minimo ?? form.stock_minimo);
     }
     return payload;
   };
@@ -152,19 +102,14 @@ const InventoryList = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    const shouldDelete = window.confirm("¿Seguro que deseas dar de baja este ítem del inventario?");
+  const handleDelete = (id) => {
+    const shouldDelete = window.confirm("¿Seguro que deseas quitar este ítem de la lista?");
     if (!shouldDelete) return;
-
-    try {
-      await deactivateInventoryItem(id);
-      setInventory((prev) => prev.filter((item) => item.id !== id));
-    } catch (err) {
-      window.alert(
-        err.response?.data?.message || err.message || "No se pudo eliminar el ítem."
-      );
-    }
+    setInventory((prev) => prev.filter((item) => item.id !== id));
   };
+
+  const isLowStock = (item) =>
+    item.threshold_minimo != null && item.cantidad < item.threshold_minimo;
 
   const filteredInventory = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -173,7 +118,6 @@ const InventoryList = () => {
     return inventory.filter((item) => {
       return (
         item.nombre.toLowerCase().includes(term) ||
-        item.categoria.toLowerCase().includes(term) ||
         item.unidad.toLowerCase().includes(term)
       );
     });
@@ -262,10 +206,7 @@ const InventoryList = () => {
                     Nombre
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-farm-green-dark">
-                    Categoría
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-farm-green-dark">
-                    Stock actual
+                    Cantidad
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-farm-green-dark">
                     Unidad
@@ -300,15 +241,9 @@ const InventoryList = () => {
                           ) : null}
                         </span>
                       </td>
-                      <td className="grid grid-cols-2 items-center gap-2 py-2 text-sm capitalize md:table-cell md:px-6 md:py-4 md:text-gray-700">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 md:hidden">
-                          Categoría
-                        </span>
-                        <span className="text-right md:text-left">{item.categoria}</span>
-                      </td>
                       <td className="grid grid-cols-2 items-center gap-2 py-2 text-sm md:table-cell md:px-6 md:py-4 md:text-gray-700">
                         <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 md:hidden">
-                          Stock
+                          Cantidad
                         </span>
                         <span
                           className={[
@@ -316,7 +251,7 @@ const InventoryList = () => {
                             low ? "font-semibold text-amber-800" : "",
                           ].join(" ")}
                         >
-                          {item.stock}
+                          {item.cantidad}
                         </span>
                       </td>
                       <td className="grid grid-cols-2 items-center gap-2 py-2 text-sm md:table-cell md:px-6 md:py-4 md:text-gray-700">
@@ -380,58 +315,30 @@ const InventoryList = () => {
             error={formErrors.nombre}
           />
 
-          <div>
-            <label htmlFor="categoria" className="mb-2 block text-sm font-medium text-gray-700">
-              Categoría
-            </label>
-            <select
-              id="categoria"
-              name="categoria"
-              value={form.categoria}
-              onChange={handleFormChange}
-              className={[
-                "w-full rounded-lg border px-4 py-2.5 text-gray-800 capitalize outline-none transition",
-                formErrors.categoria
-                  ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
-                  : "border-gray-300 focus:border-farm-green focus:ring-2 focus:ring-farm-green/20",
-              ].join(" ")}
-            >
-              <option value="">Selecciona una categoría</option>
-              {CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            {formErrors.categoria ? (
-              <p className="mt-1 text-sm text-red-600">{formErrors.categoria}</p>
-            ) : null}
-          </div>
-
           <Input
-            id="stock_actual"
-            name="stock_actual"
-            label="Stock actual"
+            id="cantidad"
+            name="cantidad"
+            label="Cantidad"
             type="number"
             min="0"
             step="any"
-            value={form.stock_actual}
+            value={form.cantidad}
             onChange={handleFormChange}
             placeholder="Ej. 20"
-            error={formErrors.stock_actual}
+            error={formErrors.cantidad}
           />
 
           <Input
-            id="stock_minimo"
-            name="stock_minimo"
-            label="Stock mínimo (opcional)"
+            id="threshold_minimo"
+            name="threshold_minimo"
+            label="Umbral mínimo (opcional)"
             type="number"
             min="0"
             step="any"
-            value={form.stock_minimo}
+            value={form.threshold_minimo}
             onChange={handleFormChange}
-            placeholder="Alerta cuando el stock llegue aquí"
-            error={formErrors.stock_minimo}
+            placeholder="Alerta cuando la cantidad llegue aquí"
+            error={formErrors.threshold_minimo}
           />
 
           <div>

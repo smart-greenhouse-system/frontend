@@ -1,57 +1,81 @@
 import axios from "axios";
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
+
 export const STORAGE_KEYS = {
   token: "token",
   type: "type",
 };
 
-// Legacy keys for backward compatibility
-const LEGACY_TOKEN_KEYS = ["access_token", "refresh_token", "auth_token", "operator_token"];
-
 export function getStoredAccessToken() {
-  return (
-    localStorage.getItem(STORAGE_KEYS.token) ||
-    localStorage.getItem("access_token") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("auth_token") ||
-    localStorage.getItem("operator_token") ||
-    ""
-  );
+  return localStorage.getItem(STORAGE_KEYS.token) ?? "";
 }
 
 export function clearAuthStorage() {
   localStorage.removeItem(STORAGE_KEYS.token);
   localStorage.removeItem(STORAGE_KEYS.type);
-  for (const key of LEGACY_TOKEN_KEYS) {
-    localStorage.removeItem(key);
-  }
 }
 
+// Instancia principal para endpoints bajo /api/*
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "",
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: API_BASE ? `${API_BASE}/api` : "/api",
+  headers: { "Content-Type": "application/json" },
 });
 
-api.interceptors.request.use((config) => {
-  const token = getStoredAccessToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+// Instancia para endpoints de /auth (sin prefijo /api)
+const authApi = axios.create({
+  baseURL: API_BASE,
+  headers: { "Content-Type": "application/json" },
 });
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error.response?.status;
-    if (status === 401 && !error.config?.skipAuthRedirect) {
-      clearAuthStorage();
-      window.location.assign("/login");
+function attachTokenInterceptor(instance) {
+  instance.interceptors.request.use((config) => {
+    const token = getStoredAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return Promise.reject(error);
-  }
-);
+    return config;
+  });
+}
 
+function attachUnauthorizedInterceptor(instance) {
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        clearAuthStorage();
+        window.location.assign("/login");
+      }
+      return Promise.reject(normalizeError(error));
+    }
+  );
+}
+
+function normalizeError(error) {
+  if (error.response?.data) {
+    const body = error.response.data;
+    return {
+      timestamp: body.timestamp ?? new Date().toISOString(),
+      status: body.status ?? error.response.status,
+      error: body.error ?? "Error",
+      message: body.message ?? error.message,
+      path: body.path ?? error.config?.url ?? "",
+    };
+  }
+  return {
+    timestamp: new Date().toISOString(),
+    status: 0,
+    error: "Network Error",
+    message: error.message ?? "No se pudo conectar con el servidor",
+    path: error.config?.url ?? "",
+  };
+}
+
+attachTokenInterceptor(api);
+attachUnauthorizedInterceptor(api);
+
+attachTokenInterceptor(authApi);
+attachUnauthorizedInterceptor(authApi);
+
+export { authApi, normalizeError };
 export default api;

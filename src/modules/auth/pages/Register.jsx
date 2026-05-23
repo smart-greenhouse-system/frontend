@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { register as registerRequest } from "../../../api/authService.js";
 import Button from "../../../components/ui/Button";
 import Input from "../../../components/ui/Input";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -11,6 +13,8 @@ const Register = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -18,18 +22,34 @@ const Register = () => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
       setErrors({
         confirmPassword: "Las contraseñas no coinciden.",
       });
-      console.log("Registro: contraseñas no coinciden");
       return;
     }
 
-    console.log("Registro: contraseñas coinciden", formData);
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      await registerRequest({
+        email: formData.email.trim(),
+        password: formData.password,
+      });
+      navigate("/login", { replace: true });
+    } catch (err) {
+      const message =
+        err?.message ??
+        (err.code === "ERR_NETWORK"
+          ? "No se pudo conectar con el servidor."
+          : "No se pudo registrar. Intenta de nuevo.");
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -92,7 +112,17 @@ const Register = () => {
             required
           />
 
-          <Button type="submit">Registrarse</Button>
+          {submitError ? (
+            <div
+              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              role="alert"
+            >
+              {submitError}
+            </div>
+          ) : null}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Registrando…" : "Registrarse"}
+          </Button>
 
           <p className="text-center text-sm text-gray-700">
             ¿Ya tienes cuenta?{" "}
