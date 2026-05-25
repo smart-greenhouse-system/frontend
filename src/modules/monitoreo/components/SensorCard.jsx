@@ -7,7 +7,7 @@ const FALLBACK_CONFIG = {
   gradient: "from-slate-400 to-slate-500",
   bgGlow: "bg-slate-400/10",
   iconBg: "bg-gradient-to-br from-slate-400 to-slate-500",
-  format: (v) => (typeof v === "number" ? String(v) : "Sin datos"),
+  format: (v) => String(v),
   min: 0,
   max: 100,
 };
@@ -20,7 +20,7 @@ const SENSOR_CONFIG = {
     gradient: "from-orange-500 to-red-500",
     bgGlow: "bg-orange-500/10",
     iconBg: "bg-gradient-to-br from-orange-400 to-red-500",
-    format: (v) => (typeof v === "number" ? v.toFixed(1) : "Sin datos"),
+    format: (v) => v.toFixed(1),
     min: 5,
     max: 45,
   },
@@ -31,7 +31,7 @@ const SENSOR_CONFIG = {
     gradient: "from-cyan-500 to-blue-600",
     bgGlow: "bg-cyan-500/10",
     iconBg: "bg-gradient-to-br from-cyan-400 to-blue-600",
-    format: (v) => (typeof v === "number" ? String(v) : "Sin datos"),
+    format: (v) => String(v),
     min: 0,
     max: 100,
   },
@@ -42,7 +42,7 @@ const SENSOR_CONFIG = {
     gradient: "from-teal-500 to-emerald-600",
     bgGlow: "bg-teal-500/10",
     iconBg: "bg-gradient-to-br from-teal-400 to-emerald-600",
-    format: (v) => (typeof v === "number" ? String(v) : "Sin datos"),
+    format: (v) => String(v),
     min: 0,
     max: 100,
   },
@@ -53,7 +53,7 @@ const SENSOR_CONFIG = {
     gradient: "from-amber-400 to-yellow-500",
     bgGlow: "bg-amber-500/10",
     iconBg: "bg-gradient-to-br from-amber-400 to-yellow-500",
-    format: (v) => (typeof v === "number" ? v.toLocaleString("es-ES") : "Sin datos"),
+    format: (v) => v.toLocaleString("es-ES"),
     min: 0,
     max: 5000,
   },
@@ -68,8 +68,7 @@ export default function SensorCard({ sensorKey, value }) {
 
   const { label, unit, Icon, gradient, bgGlow, iconBg, format, min, max } = cfg;
   const display = format(value);
-  const hasNumeric = typeof value === "number" && !Number.isNaN(value);
-  const pct = hasNumeric ? ((clamp(value, min, max) - min) / (max - min)) * 100 : 0;
+  const pct = ((clamp(value, min, max) - min) / (max - min)) * 100;
 
   return (
     <div className="group relative flex flex-col rounded-2xl border border-white/60 bg-white/80 p-5 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 sm:p-6">
@@ -98,13 +97,13 @@ export default function SensorCard({ sensorKey, value }) {
         <div className="mb-1.5 flex items-center justify-between text-[11px] text-gray-400">
           <span>Nivel</span>
           <span className="font-semibold text-gray-600">
-            {hasNumeric ? `${Math.round(pct)}%` : "Sin datos"}
+            {Math.round(pct)}%
           </span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
           <div
             className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-[width] duration-700 ease-out`}
-            style={{ width: hasNumeric ? `${pct}%` : "0%" }}
+            style={{ width: `${pct}%` }}
           />
         </div>
       </div>

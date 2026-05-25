@@ -9,7 +9,6 @@ import { getActuators } from "../../lib/actuatorApi";
 import SensorCard from "./components/SensorCard";
 import SensorHistoryChart from "./components/SensorHistoryChart";
 
-const KNOWN_SENSOR_KEYS = ["temperatura", "humedad_suelo", "humedad_relativa", "iluminacion"];
 const AUTO_REFRESH_MS = 15_000;
 
 /**
@@ -143,14 +142,19 @@ const MonitoreoIoT = () => {
     return readings.map((r) => r.device_id);
   }, [readings]);
 
-  // ── dynamic sensor keys (known + unknown from raw sensores) ──
+  // ── dynamic sensor keys — SOLO los que existen en el payload ──
   const sensorKeys = useMemo(() => {
-    if (!currentReading?.sensores) return KNOWN_SENSOR_KEYS;
-    const knownAliases = new Set(Object.values(KEY_ALIASES).flat());
-    const extra = Object.keys(currentReading.sensores).filter(
-      (k) => !knownAliases.has(k)
-    );
-    return [...KNOWN_SENSOR_KEYS, ...extra];
+    if (!currentReading?.sensores) return [];
+    const reverseAlias = {};
+    Object.entries(KEY_ALIASES).forEach(([norm, aliases]) => {
+      aliases.forEach((a) => { reverseAlias[a] = norm; });
+    });
+    const keys = new Set();
+    Object.entries(currentReading.sensores).forEach(([rawKey, value]) => {
+      if (typeof value !== "number" || Number.isNaN(value)) return;
+      keys.add(reverseAlias[rawKey] || rawKey);
+    });
+    return Array.from(keys);
   }, [currentReading]);
 
   // ── handle device switch ──
@@ -291,8 +295,10 @@ const MonitoreoIoT = () => {
           )}
 
           {/* SENSOR CARDS */}
-          {selectedDeviceId && currentReading && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {selectedDeviceId && currentReading && sensorKeys.length > 0 && (
+            <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2${
+              sensorKeys.length <= 2 ? "" : sensorKeys.length === 3 ? " lg:grid-cols-3" : " lg:grid-cols-4"
+            }`}>
               {sensorKeys.map((key) => (
                 <SensorCard
                   key={key}
@@ -355,7 +361,9 @@ const MonitoreoIoT = () => {
           )}
 
           {/* HISTORY CHART */}
-          {selectedDeviceId && <SensorHistoryChart deviceId={selectedDeviceId} />}
+          {selectedDeviceId && sensorKeys.length > 0 && (
+            <SensorHistoryChart deviceId={selectedDeviceId} sensorKeys={sensorKeys} />
+          )}
         </>
       )}
     </div>
