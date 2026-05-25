@@ -247,7 +247,7 @@ const PrediccionesIA = () => {
               type="button"
               disabled={saving || !form.device_id || !form.actuador_id || !form.timeAction}
               onClick={handleSubmit}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-farm-green-dark px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-farm-green disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-farm-green px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-farm-green-dark disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

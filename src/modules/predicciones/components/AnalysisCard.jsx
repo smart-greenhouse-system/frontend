@@ -11,6 +11,8 @@ const ESTADO_PLANTA_MAP = {
   deficiente: "Deficiente",
   pest: "Plaga",
   plaga: "Plaga",
+  nose: "No definido",
+  tesis: "Dato de Prueba",
 };
 
 const ESTADO_STYLING = {
@@ -19,12 +21,20 @@ const ESTADO_STYLING = {
   Estresada: { bg: "bg-amber-100", text: "text-amber-800", ring: "ring-amber-300", icon: AlertTriangle },
   Deficiente: { bg: "bg-orange-100", text: "text-orange-800", ring: "ring-orange-300", icon: AlertTriangle },
   Plaga: { bg: "bg-purple-100", text: "text-purple-800", ring: "ring-purple-300", icon: AlertTriangle },
+  "No definido": { bg: "bg-gray-100", text: "text-gray-600", ring: "ring-gray-300", icon: AlertTriangle },
+  "Dato de Prueba": { bg: "bg-gray-100", text: "text-gray-600", ring: "ring-gray-300", icon: AlertTriangle },
   Desconocido: { bg: "bg-gray-100", text: "text-gray-700", ring: "ring-gray-300", icon: AlertTriangle },
 };
 
 function formatConfianza(val) {
   if (val == null || typeof val !== "number") return "—";
-  return `${Math.round(val * 100)}%`;
+  return `${val}%`;
+}
+
+function formatTipo(tipo) {
+  if (!tipo) return "—";
+  if (tipo === "IMAGE_ANALYSIS") return "Análisis de Imagen";
+  return tipo;
 }
 
 function mapEstado(estado) {
@@ -61,7 +71,7 @@ export default function AnalysisCard({ analysis, featured = false }) {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {cultivo && (
-              <p className={`font-bold text-gray-800 truncate ${featured ? "text-lg" : "text-sm"}`}>
+              <p className={`font-bold text-gray-800 truncate ${featured ? "text-2xl" : "text-lg"}`}>
                 {cultivo}
               </p>
             )}
@@ -89,11 +99,17 @@ export default function AnalysisCard({ analysis, featured = false }) {
           </div>
           <div>
             <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Tipo</p>
-            <p className="mt-0.5 text-sm font-bold text-gray-800">{tipo || "—"}</p>
+            <p className="mt-0.5 text-sm font-bold text-gray-800">{formatTipo(tipo)}</p>
           </div>
           <div>
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Success</p>
-            <p className="mt-0.5 text-sm font-bold text-gray-800">{success ? "Sí" : "No"}</p>
+            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Estado</p>
+            <p className="mt-0.5 flex items-center gap-1 text-sm font-bold text-gray-800">
+              {success ? (
+                <><CheckCircle2 className="h-4 w-4 text-green-600" strokeWidth={2} /> Exitoso</>
+              ) : (
+                <><XCircle className="h-4 w-4 text-red-600" strokeWidth={2} /> Fallido</>
+              )}
+            </p>
           </div>
         </div>
 
