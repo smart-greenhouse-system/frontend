@@ -16,29 +16,29 @@ Panel web para operadores de invernaderos inteligentes. Consume **20+ endpoints 
 ## Arquitectura del Sistema
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                          Frontend                                 │
-│          React 19 · Vite 8 · Tailwind v4 · Recharts 3.8         │
-│                                                                  │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────────────────┐  │
-│  │ Auth     │  │ lib/     │  │ Modules (9 dominios)         │  │
-│  │ Guards   │  │ (8 APIs) │  │  dashboard  monitoreo   ia   │  │
-│  └────┬─────┘  └────┬─────┘  │  dispositivos control    │  │
-│       └─────────────┼────────│  predicciones  alertas    │  │
-│                     │        │  inventory    config       │  │
-│                     │        └──────────────────────────────┘  │
-│                     │ Axios                                     │
-│              ┌──────┴──────┐                                    │
-│              │ Interceptor │                                    │
-│              │ JWT Bearer  │                                    │
-│              └──────┬──────┘                                    │
-└─────────────────────┼────────────────────────────────────────────┘
-                      │ HTTPS
-             ┌────────┴────────────┐
-             │  Backend (Render)   │
-             │  Spring Boot 3 +    │
-             │  JPA + MongoDB      │
-             └─────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                          Frontend                                     │
+│          React 19 · Vite 8 · Tailwind v4 · Recharts 3.8             │
+│                                                                      │
+│  ┌──────────┐  ┌──────────────┐  ┌──────────────────────────────┐  │
+│  │ Auth     │  │ services/    │  │ Modules (9 dominios)         │  │
+│  │ Guards   │  │ (8 APIs)     │  │  dashboard  monitoreo   ia   │  │
+│  └────┬─────┘  └──────┬───────┘  │  dispositivos control    │  │
+│       └───────────────┼──────────│  predicciones  alertas    │  │
+│                       │          │  inventory    config       │  │
+│                       │          └──────────────────────────────┘  │
+│                       │ Axios                                       │
+│                ┌──────┴──────┐                                      │
+│                │ Interceptor │                                      │
+│                │ JWT Bearer  │                                      │
+│                └──────┬──────┘                                      │
+└───────────────────────┼──────────────────────────────────────────────┘
+                        │ HTTPS
+               ┌────────┴────────────┐
+               │  Backend (Render)   │
+               │  Spring Boot 3 +    │
+               │  JPA + MongoDB      │
+               └─────────────────────┘
 ```
 
 Cada módulo del frontend está **espejado 1:1** con un controlador Java del backend. Los DTOs JavaScript (`@typedef`) reflejan exactamente los campos de los `*Response.java`, garantizando que el contrato de datos sea idéntico en ambas capas.
@@ -69,36 +69,181 @@ El flujo de seguridad está centralizado en `src/api/api.js` y `src/api/authServ
 4. **Interceptor de respuesta**: Si el backend responde con `401`, se limpia la sesión y se redirige a `/login`.
 5. **Route Guards**:
    - `ProtectedRoute`: bloquea el acceso si no hay token — redirige a `/login`.
-   - `GuestRoute`: si el usuario ya tiene sesión activa, redirige a **`/monitoreo`** (no a `/inventory`).
+   - `GuestRoute`: si el usuario ya tiene sesión activa, redirige a **`/monitoreo`** (destino post‑login predeterminado).
 
 ---
 
-## Arquitectura de Sensores (Map<String, Double>)
+## Navegación Centro de Comando
 
-El backend almacena las lecturas de sensores en un `Map<String, Double>` dinámico — no hay campos fijos. El frontend normaliza estas keys mediante `KEY_ALIASES` en `src/lib/sensorApi.js`, que mapea múltiples nombres posibles a 4 variables canónicas:
+### Selector de Nodos Integrado
 
-| Variable | Unidad | Alias aceptados |
+El módulo de Monitoreo IoT (`MonitoreoIoT.jsx`) incorpora un **Selector de Nodos** tipo pill/cápsula en la parte superior del dashboard. Cada nodo disponible se muestra como un botón con:
+
+- **Indicador de conexión**: círculo verde (`bg-green-500`) si `estado === "ONLINE"`, rojo (`bg-red-400`) si está `OFFLINE`.
+- **Estado activo**: el nodo seleccionado se resalta con `bg-farm-green-dark text-white`.
+- **Scroll horizontal**: en móviles, los pills se deslizan horizontalmente sin romper el layout.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Nodos   [● Nodo 1]  [● Nodo 2]  [○ Nodo 3]             │
+│           └─ activo ─┘                                   │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Instantaneidad**: al hacer clic en un pill, se actualiza el `searchParam` `deviceId` en la URL y el dashboard se reconstruye al instante con los sensores, gráficas y actuadores del nodo seleccionado — sin recarga de página.
+
+### Flujo de Inicio Post‑Login
+
+El primer enlace del sidebar es `/monitoreo`. Tras el login, `GuestRoute` redirige automáticamente a `/monitoreo`, donde el sistema:
+1. Obtiene la lista de dispositivos via `GET /api/devices`.
+2. Selecciona el **primer dispositivo disponible** como predeterminado.
+3. Inicia el polling de lecturas cada 15 segundos.
+
+```
+Login ──▶ /monitoreo ──▶ GET /api/devices ──▶ auto‑select device_1
+                        ──▶ GET /api/sensors/latest ──▶ render cards + charts
+                        ──▶ setInterval(15s) ──▶ polling silencioso
+```
+
+---
+
+## Arquitectura Hardware‑Driven
+
+### Espejo del Hardware Físico
+
+La interfaz de Monitoreo IoT es ahora un **espejo exacto del hardware físico**. El backend almacena las lecturas en un `Map<String, Double>` dinámico — sin esquema fijo. El frontend:
+
+1. Lee las llaves reales del `sensores` del payload del nodo seleccionado.
+2. Normaliza mediante `KEY_ALIASES` en `src/services/sensorApi.js`.
+3. **Solo renderiza tarjetas y gráficas para las llaves presentes con valor numérico**.
+
+```
+Nodo 1 (hardware real)          Frontend renderizado
+┌──────────────────────┐       ┌──────────────────┐
+│ temperatura: 28.5    │──▶    │ Tarjeta Temp  °C │
+│ humedad_suelo: 45   │──▶    │ Tarjeta Hum Suelo│
+└──────────────────────┘       └──────────────────┘
+                               (NO se renderiza
+                                Humedad Relativa
+                                ni Iluminación)
+
+Nodo 2 (hardware real)          Frontend renderizado
+┌──────────────────────┐       ┌──────────────────┐
+│ luz: 1200            │──▶    │ Tarjeta Iluminac │
+│ temperatura: 30.1    │──▶    │ Tarjeta Temp  °C │
+└──────────────────────┘       └──────────────────┘
+                               (NO se renderiza
+                                Humedad Suelo
+                                ni Humedad Relativa)
+```
+
+| Variable canónica | Unidad | Alias aceptados en backend |
 |---|---|---|
 | `temperatura` | °C | temperatura, temperature, temp |
 | `humedad_relativa` | % | humedad_relativa, humedad, humedad_aire, hr, humidity |
 | `humedad_suelo` | % | humedad_suelo, soil_moisture, humidity_soil, hum_suelo, moisture |
 | `iluminacion` | lux | iluminacion, luz, light, illuminance, lux |
 
-**Arquitectura agnóstica de sensores**: El dashboard de Monitoreo IoT detecta **automáticamente cualquier llave nueva** del `Map<String, Double>` del backend que no tenga un alias conocido. Estas llaves desconocidas se renderizan como tarjetas adicionales y gráficas de historial dinámicas, sin requerir cambios en el código del frontend.
+**Sensores desconocidos**: cualquier llave en el `Map<String, Double>` que no coincida con un alias conocido se renderiza automáticamente con el `FALLBACK_CONFIG` (ícono `Activity`, gradiente slate), logrando un sistema **agnóstico a nuevos tipos de sensores** sin modificar el código.
+
+### Jerarquía Device → Sensors → Actuators
 
 ```
-Backend Map<String, Double>          Frontend
-┌─────────────────────┐             ┌─────────────────────┐
-│ "temperature": 25.4 │  ──axios──▶ │ temperatura  → Card │
-│ "humidity":   68.2  │  ──axios──▶ │ humedad_r.   → Card │
-│ "soil_moist": 45.0 │  ──axios──▶ │ humedad_suelo→ Card │
-│ "light":     1200   │  ──axios──▶ │ iluminacion  → Card │
-│ "co2":        410   │  ──axios──▶ │ co2   → Card (auto) │ ← dinámico
-│ "ph":          6.8  │  ──axios──▶ │ ph    → Card (auto) │ ← dinámico
-└─────────────────────┘             └─────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│                     Monitoreo IoT                     │
+│                                                       │
+│  ┌── Selector de Nodos (pills) ──────────────────┐  │
+│  │  [● Nodo 1]  [● Nodo 2]                       │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                       │
+│  ┌── Info Bar ────────────────────────────────────┐  │
+│  │  Nodo 1 · estado: ONLINE · sensores: 2         │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                       │
+│  ┌── Sensor Cards (grid dinámico) ───────────────┐  │
+│  │  ┌──────────┐  ┌──────────┐                    │  │
+│  │  │ Temp 28°C│  │ Hum 45%  │                    │  │
+│  │  └──────────┘  └──────────┘                    │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                       │
+│  ┌── History Charts (grid dinámico) ─────────────┐  │
+│  │  ┌──────────┐  ┌──────────┐                    │  │
+│  │  │  Temp    │  │  Hum     │                    │  │
+│  │  │ gráfica  │  │ gráfica  │                    │  │
+│  │  └──────────┘  └──────────┘                    │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                       │
+│  ┌── Actuadores Asociados ───────────────────────┐  │
+│  │  ┌──────────┐  ┌──────────┐                    │  │
+│  │  │ Riego ON │  │ Ventil.  │                    │  │
+│  │  └──────────┘  └──────────┘                    │  │
+│  └──────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
 ```
 
-**Polling**: El dashboard de Monitoreo IoT refresca lecturas cada **15 segundos** con un indicador visual sutil (punto pulsante + "Actualizando…"), sin recargar la interfaz completa.
+### Polling en Tiempo Real
+
+El dashboard refresca lecturas cada **15 segundos** con un indicador visual sutil (punto pulsante verde + "Actualizando…"), sin interrumpir la interacción del usuario. El botón "Actualizar" permite un refresh manual inmediato.
+
+---
+
+## Lógica de Gráficas Inteligentes
+
+Cada sensor tiene su propio gráfico de historial con:
+
+- **Escala independiente**: eje Y con dominio calculado mediante el algoritmo `niceDomain`, que redondea los límites al múltiplo del `step` más cercano, asegurando escalas limpias sin decimales innecesarios.
+
+```
+Ejemplo niceDomain:
+  valores = [22.3, 25.7, 28.1, 24.9]
+  step = 5
+  → dominio [20, 30]  (en lugar de [22.3, 28.1])
+```
+
+- **Regla de visualización ≥2**: Solo se genera una gráfica si el sensor existe en el nodo actual **Y** tiene al menos **2 puntos de datos numéricos** en el historial. Esto elimina gráficas vacías o líneas de un solo punto sin valor informativo.
+
+- **Sincronización con tarjetas**: Las gráficas se renderizan usando la misma `sensorKeys` que las tarjetas superiores, garantizando que sean un **espejo exacto** — ni una gráfica más, ni una menos.
+
+- **Claves desconocidas**: Cualquier sensor nuevo (ej. `co2`, `ph`) detectado en el historial genera automáticamente una gráfica con color gris (`#9ca3af`) y etiqueta formateada.
+
+---
+
+## Módulo de IA y Alertas
+
+### Análisis de Imagen IA
+
+El sistema de IA expone dos endpoints consumidos por `ResultadosIA` (`/ia`) y `PrediccionesIA` (`/predicciones`):
+
+```
+GET /api/predictions/latest-image-analysis   → último análisis disponible
+GET /api/predictions/image-analysis          → historial completo
+POST /api/predictions                        → crear nueva predicción
+```
+
+**Fix de métricas de confianza**: El normalizador `normalizeImageAnalysis` en `src/services/predictionApi.js` unifica el formato de confianza que puede llegar como decimal (`0.85`) o porcentaje (`85`):
+
+```
+confianzaRaw ≤ 1  →  confianzaRaw * 100   (decimal a porcentaje)
+confianzaRaw > 1  →  confianzaRaw         (ya está en porcentaje)
+```
+
+El resultado siempre se muestra como porcentaje entero (`confianza: 85`), independientemente del formato original del backend.
+
+### Módulo de Alertas
+
+El módulo de Alertas (`Alertas.jsx`) consume `GET /api/actuator-events` y aplica un **mapeo de severidad basado en el origen** del evento:
+
+| Origen (`origin`) | Severidad | Color UX |
+|---|---|---|
+| `IA` | `advertencia` | Ámbar |
+| `IOT` | `info` | Azul |
+| `CONFIRMATION` | `info` | Azul |
+| `MANUAL` | `sistema` | Gris |
+| `fail` / `error` / `crit` | `peligro` | Rojo |
+
+**Paginación inteligente 20‑en‑20**: La carga inicial muestra **20 eventos**. Un botón "Ver más historial (N restantes)" permite expandir progresivamente en bloques de 20. Los IDs de eventos leídos se persisten en `localStorage` mediante un `Set<string>` (`alertas_leidas`).
+
+**Marcar todas como leídas**: Botón que agrega todos los IDs visibles (incluyendo los paginados pero no cargados) al set de leídas en una sola acción. Al recargar la página, los eventos previamente marcados aparecen con estilo atenuado (`opacity-60`).
 
 ---
 
@@ -108,57 +253,18 @@ Backend Map<String, Double>          Frontend
 |---|---|---|
 | `/` | `Navigate → /dashboard` | Redirección automática al dashboard general |
 | `/dashboard` | `DashboardHome` | Vista consolidada con KPI cards, tendencia, últimas alertas y accesos directos |
-| `/monitoreo` | `MonitoreoIoT` | Sensores en tiempo real con auto‑refresh, selector de dispositivo, 4+ gráficas de historial |
+| `/monitoreo` | `MonitoreoIoT` | Sensores en tiempo real con auto‑refresh, selector de nodos pill, gráficas de historial dinámicas |
 | `/ia` | `ResultadosIA` | Análisis de imagen IA, historial en tabla, formulario de ejecución de análisis |
 | `/predicciones` | `PrediccionesIA` | Último análisis destacado + grid de historial + formulario de predicción con selección de actuador |
 | `/dispositivos` | `DeviceList` | Catálogo de dispositivos con buscador y estado online/offline |
 | `/control` | `Control` | CRUD de actuadores, selector por dispositivo, ejecución ON/OFF con feedback, historial de eventos |
-| `/alertas` | `Alertas` | Historial de eventos con severidad mapeada, filtros, paginación 20‑en‑20 |
+| `/alertas` | `Alertas` | Historial de eventos con severidad mapeada, filtros, paginación 20‑en‑20, "Marcar todas como leídas" |
 | `/inventory` | `InventoryList` | CRUD de insumos con buscador y umbral de stock bajo |
 | `/config` | `Config` | Configuración del invernadero (nombre, modo automático, frecuencia IA) |
 
 **Rutas públicas**: `/login`, `/register`. **Ruta catch-all**: `*` → página 404 personalizada.
 
-> **Home oficial**: `/monitoreo` — es el primer enlace del sidebar y el destino de `GuestRoute` post‑login. Incluye auto‑selección del primer dispositivo disponible al cargar.
-
----
-
-## Lógica de Alertas Inteligente
-
-El módulo de Alertas (`src/modules/alertas/Alertas.jsx`) consume `GET /api/actuator-events` y aplica un **mapeo de severidad basado en el origen** del evento:
-
-| Origen (`origin`) | Severidad asignada | Color UX |
-|---|---|---|
-| `IA` | `advertencia` | Ámbar |
-| `IOT` | `info` | Azul |
-| `CONFIRMATION` | `info` | Azul |
-| `MANUAL` | `sistema` | Gris |
-| *fallback* | `info` | Azul |
-
-Además, cualquier evento con `status/event_type` conteniendo `fail`, `error` o `crit` se clasifica como **`peligro`** (rojo), independientemente del origen.
-
-**Paginación**: La vista inicial carga **20 eventos**. Un botón "Ver más historial (N restantes)" permite expandir progresivamente. Los eventos leídos se persisten en `localStorage` mediante un `Set` de IDs (`alertas_leidas`), con opción "Marcar todas como leídas".
-
----
-
-## Sincronización de IA
-
-### Flujo de análisis de imagen
-
-El sistema de IA expone dos endpoints consumidos por los módulos `ResultadosIA` (`/ia`) y `PrediccionesIA` (`/predicciones`):
-
-```
-GET /api/predictions/latest-image-analysis   → último análisis disponible
-GET /api/predictions/image-analysis          → historial completo
-POST /api/predictions                        → crear nueva predicción
-```
-
-**Fix de métricas de confianza**: El normalizador `normalizeImageAnalysis` en `src/lib/predictionApi.js` unifica el formato de confianza que puede llegar como decimal (0.85) o porcentaje (85). Si el valor es `≤ 1`, se multiplica por 100 automáticamente. El resultado siempre se muestra como porcentaje entero (`confianza: 85`).
-
-### Diferencia entre `/ia` y `/predicciones`
-
-- **`/ia`** → `ResultadosIA`: Panel con formulario para ejecutar análisis, `PredictionInsightsPanel` con la última predicción destacada, y tabla de historial completo (`created_at`, `cultivo`, `device_id`, `estado_planta`, `confianza`, `tiempo_cosecha_dias`, `success`).
-- **`/predicciones`** → `PrediccionesIA`: Muestra el último análisis en `AnalysisCard` formato featured, grid de historial, y formulario de predicción que permite crear una nueva programación (dispositivo + actuador + tiempo OFF automático en segundos).
+> **Home oficial**: `/monitoreo` — es el primer enlace del sidebar y el destino de `GuestRoute` post‑login. Incluye auto‑selección del primer dispositivo disponible.
 
 ---
 
@@ -181,12 +287,14 @@ El sistema está diseñado para manejar datos inesperados y fallos del servidor 
 
 | Característica | Detalle |
 |---|---|
-| **Gráficas independientes por escala** | Cada sensor (temperatura, humedad suelo, humedad relativa, iluminación) tiene su propio gráfico con eje Y con dominio calculado dinámicamente (`niceDomain`). Las variaciones en una escala no opacan movimientos en otra. |
-| **Feedback real de actuadores** | El módulo `Control` muestra indicadores visuales de resultado tras ejecutar un comando ON/OFF: `CheckCircle2` (verde) para éxito, `XCircle` (rojo) para error, con mensaje del backend. |
-| **Indicador online/offline** | Barra de info del dispositivo en Monitoreo IoT con `Wifi`/`WifiOff`, badge de color verde/rojo, y timestamp de última lectura. |
-| **Refresh silencioso** | Polling a 15s con animación de ping pulsante + "Actualizando…" sin interrumpir la interacción del usuario. |
-| **Sidebar colapsable** | Barra lateral con modo compacto (iconos solamente) para maximizar espacio en pantalla, con persistencia de estado. |
-| **Modo automático con advertencia** | La página de Config muestra una advertencia visual explícita al activar el modo automático del invernadero. |
+| **Navegación Centro de Comando** | Selector de nodos tipo pill/cápsula con indicador Online/Offline, scroll horizontal en móviles, cambio instantáneo de contexto vía searchParams |
+| **Arquitectura Hardware‑Driven** | Dashboard es espejo exacto del hardware: solo renderiza tarjetas y gráficas de los sensores que el nodo realmente posee |
+| **Gráficas inteligentes** | `niceDomain` para ejes Y redondeados; regla ≥2 puntos de datos para evitar gráficas vacías; colores consistentes entre tarjetas y gráficas |
+| **Feedback real de actuadores** | El módulo `Control` muestra indicadores visuales de resultado tras ejecutar un comando ON/OFF: `CheckCircle2` (verde) para éxito, `XCircle` (rojo) para error, con mensaje del backend |
+| **Refresh silencioso** | Polling a 15s con animación de ping pulsante + "Actualizando…" sin interrumpir la interacción del usuario |
+| **Sidebar colapsable** | Barra lateral con modo compacto (iconos solamente) para maximizar espacio en pantalla, con persistencia de estado |
+| **Modo automático con advertencia** | La página de Config muestra una advertencia visual explícita al activar el modo automático del invernadero |
+| **Paginación inteligente en alertas** | Carga 20 eventos; expande progresivamente con "Ver más"; "Marcar todas como leídas" persiste en localStorage |
 
 ---
 
@@ -197,8 +305,8 @@ src/
 ├── api/                            # Cliente Axios con interceptores JWT
 │   ├── api.js                      # Instancia axios, interceptores, normalizeError
 │   └── authService.js              # login, register, logout, persistAuthSession
-├── lib/                            # 8 módulos API (uno por dominio backend)
-│   ├── sensorApi.js                # Lecturas de sensores + normalización KEY_ALIASES
+├── services/                       # 8 módulos API (uno por dominio backend)
+│   ├── sensorApi.js                # Lecturas de sensores + KEY_ALIASES + normalizeSensorEntry
 │   ├── deviceApi.js                # Catálogo de dispositivos
 │   ├── actuatorApi.js              # Actuadores CRUD + execute + events
 │   ├── actuatorEventsApi.js        # Eventos de actuadores con normalización
@@ -231,9 +339,9 @@ src/
 
 ---
 
-## Sincronización Backend-Frontend
+## Sincronización Backend‑Frontend
 
-Cada archivo en `src/lib/` se corresponde 1:1 con un controlador Java del backend:
+Cada archivo en `src/services/` se corresponde 1:1 con un controlador Java del backend:
 
 | Archivo frontend | Controller Java | Endpoint base |
 |---|---|---|
@@ -272,7 +380,7 @@ npm install
 echo "VITE_API_URL=https://smart-greenhouse-backend-ec00.onrender.com" > .env
 ```
 
-> **⚠️ El backend está alojado en una instancia gratuita de Render.** En el primer request tras un período de inactividad, el servidor tarda aproximadamente **60 segundos en "despertar"**. Las peticiones posteriores responden en tiempo real.
+> **⚠️ El backend está alojado en una instancia gratuita de Render.** En el primer request tras un período de inactividad, el servidor tarda aproximadamente **60 segundos en "despertar"** (Cold Start). Las peticiones posteriores responden en tiempo real.
 
 ### Scripts disponibles
 
