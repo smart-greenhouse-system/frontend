@@ -1,34 +1,38 @@
 # SmartGreenHouse — Frontend
 
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![React](https://img.shields.io/badge/React_19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite_8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Axios](https://img.shields.io/badge/Axios-1.16-5A29E4?logo=axios&logoColor=white)](https://axios-http.com/)
-[![React Router](https://img.shields.io/badge/React_Router-7-CA4245?logo=react-router&logoColor=white)](https://reactrouter.com/)
-[![Recharts](https://img.shields.io/badge/Recharts-3.8-22B5BF?logo=recharts&logoColor=white)](https://recharts.org/)
+[![Axios](https://img.shields.io/badge/Axios_1.16-5A29E4?logo=axios&logoColor=white)](https://axios-http.com/)
+[![React Router](https://img.shields.io/badge/React_Router_7-CA4245?logo=react-router&logoColor=white)](https://reactrouter.com/)
+[![Recharts](https://img.shields.io/badge/Recharts_3.8-22B5BF?logo=recharts&logoColor=white)](https://recharts.org/)
+[![Lucide](https://img.shields.io/badge/Lucide_1.14-F56565?logo=lucide&logoColor=white)](https://lucide.dev/)
+[![License](https://img.shields.io/badge/License-MIT-3DA639)](#)
 
-Panel web para operadores de invernaderos inteligentes. Consume 20 endpoints REST de un backend Java Spring Boot con arquitectura hexagonal. Incluye monitoreo IoT en tiempo real, control de actuadores, análisis predictivo con IA, inventario de insumos y configuración del invernadero — todo sincronizado con una API real sin datos mock.
+Panel web para operadores de invernaderos inteligentes. Consume **20+ endpoints REST** de un backend Java Spring Boot con arquitectura hexagonal. Incluye monitoreo IoT en tiempo real con polling automático, control de actuadores con feedback de ejecución, análisis predictivo con IA, alertas inteligentes con mapeo de severidad, inventario de insumos y configuración del invernadero — todo sincronizado con una API real sin datos mock.
 
 ---
 
 ## Arquitectura del Sistema
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                     Frontend                             │
-│  React 19 · Vite 8 · Tailwind v4 · Recharts 3.8        │
-│                                                         │
-│  ┌──────────┐  ┌──────────┐  ┌────────┐  ┌──────────┐ │
-│  │ Auth     │  │ Lib/     │  │ UI Kit │  │ Modules/ │ │
-│  │ Guards   │  │ (7 APIs) │  │ Atoms  │  │  7 mod.  │ │
-│  └────┬─────┘  └────┬─────┘  └────────┘  └────┬─────┘ │
-│       └─────────────┼─────────────────────────┘       │
-│                     │ Axios                            │
-│              ┌──────┴──────┐                           │
-│              │ Interceptor │                           │
-│              │ JWT Bearer  │                           │
-│              └──────┬──────┘                           │
-└─────────────────────┼───────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                          Frontend                                 │
+│          React 19 · Vite 8 · Tailwind v4 · Recharts 3.8         │
+│                                                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────────────────┐  │
+│  │ Auth     │  │ lib/     │  │ Modules (9 dominios)         │  │
+│  │ Guards   │  │ (8 APIs) │  │  dashboard  monitoreo   ia   │  │
+│  └────┬─────┘  └────┬─────┘  │  dispositivos control    │  │
+│       └─────────────┼────────│  predicciones  alertas    │  │
+│                     │        │  inventory    config       │  │
+│                     │        └──────────────────────────────┘  │
+│                     │ Axios                                     │
+│              ┌──────┴──────┐                                    │
+│              │ Interceptor │                                    │
+│              │ JWT Bearer  │                                    │
+│              └──────┬──────┘                                    │
+└─────────────────────┼────────────────────────────────────────────┘
                       │ HTTPS
              ┌────────┴────────────┐
              │  Backend (Render)   │
@@ -45,13 +49,13 @@ Cada módulo del frontend está **espejado 1:1** con un controlador Java del bac
 
 | Tecnología | Versión | Propósito |
 |---|---|---|
-| **React** | 19 | UI declarativa y componentes reutilizables |
-| **Vite** | 8 | Dev server con HMR y build de producción |
-| **Tailwind CSS** | 4 | Estilos utilitarios con tokens de color personalizados |
-| **Axios** | 1.16 | Cliente HTTP con interceptores de petición/respuesta |
-| **React Router** | 7 | Enrutamiento declarativo con layout anidado y guards |
-| **Recharts** | 3.8 | Gráficas de líneas para historial de sensores (4 independientes) |
-| **Lucide React** | 1.14 | Iconografía consistente en sidebar, tarjetas y acciones |
+| **React** | 19.2.5 | UI declarativa con componentes funcionales y hooks |
+| **Vite** | 8.0.10 | Dev server con HMR y build de producción optimizado |
+| **Tailwind CSS** | 4.2.4 | Estilos utilitarios con tokens de color personalizados (tema farm) |
+| **Axios** | 1.16.0 | Cliente HTTP con interceptores de petición/respuesta y JWT Bearer |
+| **React Router** | 7.14.2 | Enrutamiento declarativo con layout anidado, guards y search params |
+| **Recharts** | 3.8.1 | Gráficas de líneas con escalas independientes por variable |
+| **Lucide React** | 1.14.0 | Iconografía consistente en sidebar, tarjetas y botones |
 
 ---
 
@@ -64,14 +68,14 @@ El flujo de seguridad está centralizado en `src/api/api.js` y `src/api/authServ
 3. **Interceptor de petición**: Cada request inyecta automáticamente `Authorization: Bearer <token>` vía Axios interceptor.
 4. **Interceptor de respuesta**: Si el backend responde con `401`, se limpia la sesión y se redirige a `/login`.
 5. **Route Guards**:
-   - `ProtectedRoute`: bloquea el acceso al dashboard si no hay token.
-   - `GuestRoute`: redirige a `/inventory` si el usuario ya tiene sesión activa.
+   - `ProtectedRoute`: bloquea el acceso si no hay token — redirige a `/login`.
+   - `GuestRoute`: si el usuario ya tiene sesión activa, redirige a **`/monitoreo`** (no a `/inventory`).
 
 ---
 
 ## Arquitectura de Sensores (Map<String, Double>)
 
-El backend almacena las lecturas de sensores en un `Map<String, Double>` dinámico — no hay campos fijos. El frontend normaliza estas keys mediante `KEY_ALIASES` en `src/lib/sensorApi.js`, que mapea múltiples nombres posibles (ej. `"temperature"`, `"temp"`) a 4 variables canónicas:
+El backend almacena las lecturas de sensores en un `Map<String, Double>` dinámico — no hay campos fijos. El frontend normaliza estas keys mediante `KEY_ALIASES` en `src/lib/sensorApi.js`, que mapea múltiples nombres posibles a 4 variables canónicas:
 
 | Variable | Unidad | Alias aceptados |
 |---|---|---|
@@ -80,26 +84,109 @@ El backend almacena las lecturas de sensores en un `Map<String, Double>` dinámi
 | `humedad_suelo` | % | humedad_suelo, soil_moisture, humidity_soil, hum_suelo, moisture |
 | `iluminacion` | lux | iluminacion, luz, light, illuminance, lux |
 
-**Polling**: El dashboard de Monitoreo IoT refresca lecturas cada 15 segundos con un indicador visual sutil (punto pulsante + "Actualizando…"), sin recargar la interfaz completa. Cada variable tiene su propia gráfica de historial en un grid 2×2 con eje Y independiente (0–50 °C, 0–100 %, 0–100 %, auto), permitiendo ver tendencias sin que las diferentes escalas opaque los movimientos.
+**Arquitectura agnóstica de sensores**: El dashboard de Monitoreo IoT detecta **automáticamente cualquier llave nueva** del `Map<String, Double>` del backend que no tenga un alias conocido. Estas llaves desconocidas se renderizan como tarjetas adicionales y gráficas de historial dinámicas, sin requerir cambios en el código del frontend.
 
-Si un dispositivo MQTT envía una variable no contemplada, el backend la almacena y el frontend la ignora hasta que se agregue su alias a `KEY_ALIASES`. El sistema es **agnóstico al nombre de la variable**.
+```
+Backend Map<String, Double>          Frontend
+┌─────────────────────┐             ┌─────────────────────┐
+│ "temperature": 25.4 │  ──axios──▶ │ temperatura  → Card │
+│ "humidity":   68.2  │  ──axios──▶ │ humedad_r.   → Card │
+│ "soil_moist": 45.0 │  ──axios──▶ │ humedad_suelo→ Card │
+│ "light":     1200   │  ──axios──▶ │ iluminacion  → Card │
+│ "co2":        410   │  ──axios──▶ │ co2   → Card (auto) │ ← dinámico
+│ "ph":          6.8  │  ──axios──▶ │ ph    → Card (auto) │ ← dinámico
+└─────────────────────┘             └─────────────────────┘
+```
+
+**Polling**: El dashboard de Monitoreo IoT refresca lecturas cada **15 segundos** con un indicador visual sutil (punto pulsante + "Actualizando…"), sin recargar la interfaz completa.
 
 ---
 
-## Módulos Funcionales
+## Sistema de Rutas
 
-| Módulo | Ruta | Descripción | Endpoints principales |
-|---|---|---|---|
-| Monitoreo IoT | `/monitoreo` | Sensores en tiempo real con polling 15s, selector de dispositivo, barra de info con estado online/offline, actuadores asociados, 4 gráficas de historial independientes | `GET /api/sensors/latest`, `GET /api/sensors/history/{id}`, `GET /api/devices`, `GET /api/actuators` |
-| Dispositivos | `/dispositivos` | Catálogo de dispositivos con buscador, indicador online (< 5 min), conteo de sensores/actuadores asociados | `GET /api/devices` |
-| Control | `/control` | CRUD completo de actuadores, selector de dispositivo, ejecución ON/OFF con indicador de resultado, pestaña de historial de eventos por dispositivo | `GET /api/actuators`, `POST /api/actuators`, `PATCH /api/actuators/{id}`, `DELETE /api/actuators/{id}`, `POST /api/actuators/execute`, `GET /api/actuator-events/{deviceId}` |
-| Predicciones IA | `/predicciones` | Último análisis destacado, historial en grid, formulario de predicción con selección de dispositivo y actuador | `GET /api/predictions/latest-image-analysis`, `GET /api/predictions/image-analysis`, `POST /api/predictions` |
-| Alertas | `/alertas` | Historial de eventos de actuadores con filtros por severidad y origen, persistencia de leídas en localStorage | `GET /api/actuator-events` |
-| Inventario | `/inventory` | CRUD de insumos con buscador, indicador de stock bajo, umbral mínimo configurable | `GET /api/inventory`, `POST /api/inventory`, `PATCH /api/inventory/{id}` |
-| Configuración | `/config` | Nombre del invernadero, modo automático (con advertencia visual), frecuencia de análisis IA | `GET /api/config`, `PATCH /api/config` |
+| Ruta | Componente | Descripción |
+|---|---|---|
+| `/` | `Navigate → /dashboard` | Redirección automática al dashboard general |
+| `/dashboard` | `DashboardHome` | Vista consolidada con KPI cards, tendencia, últimas alertas y accesos directos |
+| `/monitoreo` | `MonitoreoIoT` | Sensores en tiempo real con auto‑refresh, selector de dispositivo, 4+ gráficas de historial |
+| `/ia` | `ResultadosIA` | Análisis de imagen IA, historial en tabla, formulario de ejecución de análisis |
+| `/predicciones` | `PrediccionesIA` | Último análisis destacado + grid de historial + formulario de predicción con selección de actuador |
+| `/dispositivos` | `DeviceList` | Catálogo de dispositivos con buscador y estado online/offline |
+| `/control` | `Control` | CRUD de actuadores, selector por dispositivo, ejecución ON/OFF con feedback, historial de eventos |
+| `/alertas` | `Alertas` | Historial de eventos con severidad mapeada, filtros, paginación 20‑en‑20 |
+| `/inventory` | `InventoryList` | CRUD de insumos con buscador y umbral de stock bajo |
+| `/config` | `Config` | Configuración del invernadero (nombre, modo automático, frecuencia IA) |
 
-**Rutas públicas**: `/login`, `/register`.  
-**Ruta catch-all**: `*` → página 404 personalizada con enlace de retorno al dashboard.
+**Rutas públicas**: `/login`, `/register`. **Ruta catch-all**: `*` → página 404 personalizada.
+
+> **Home oficial**: `/monitoreo` — es el primer enlace del sidebar y el destino de `GuestRoute` post‑login. Incluye auto‑selección del primer dispositivo disponible al cargar.
+
+---
+
+## Lógica de Alertas Inteligente
+
+El módulo de Alertas (`src/modules/alertas/Alertas.jsx`) consume `GET /api/actuator-events` y aplica un **mapeo de severidad basado en el origen** del evento:
+
+| Origen (`origin`) | Severidad asignada | Color UX |
+|---|---|---|
+| `IA` | `advertencia` | Ámbar |
+| `IOT` | `info` | Azul |
+| `CONFIRMATION` | `info` | Azul |
+| `MANUAL` | `sistema` | Gris |
+| *fallback* | `info` | Azul |
+
+Además, cualquier evento con `status/event_type` conteniendo `fail`, `error` o `crit` se clasifica como **`peligro`** (rojo), independientemente del origen.
+
+**Paginación**: La vista inicial carga **20 eventos**. Un botón "Ver más historial (N restantes)" permite expandir progresivamente. Los eventos leídos se persisten en `localStorage` mediante un `Set` de IDs (`alertas_leidas`), con opción "Marcar todas como leídas".
+
+---
+
+## Sincronización de IA
+
+### Flujo de análisis de imagen
+
+El sistema de IA expone dos endpoints consumidos por los módulos `ResultadosIA` (`/ia`) y `PrediccionesIA` (`/predicciones`):
+
+```
+GET /api/predictions/latest-image-analysis   → último análisis disponible
+GET /api/predictions/image-analysis          → historial completo
+POST /api/predictions                        → crear nueva predicción
+```
+
+**Fix de métricas de confianza**: El normalizador `normalizeImageAnalysis` en `src/lib/predictionApi.js` unifica el formato de confianza que puede llegar como decimal (0.85) o porcentaje (85). Si el valor es `≤ 1`, se multiplica por 100 automáticamente. El resultado siempre se muestra como porcentaje entero (`confianza: 85`).
+
+### Diferencia entre `/ia` y `/predicciones`
+
+- **`/ia`** → `ResultadosIA`: Panel con formulario para ejecutar análisis, `PredictionInsightsPanel` con la última predicción destacada, y tabla de historial completo (`created_at`, `cultivo`, `device_id`, `estado_planta`, `confianza`, `tiempo_cosecha_dias`, `success`).
+- **`/predicciones`** → `PrediccionesIA`: Muestra el último análisis en `AnalysisCard` formato featured, grid de historial, y formulario de predicción que permite crear una nueva programación (dispositivo + actuador + tiempo OFF automático en segundos).
+
+---
+
+## Programación Defensiva
+
+El sistema está diseñado para manejar datos inesperados y fallos del servidor sin romperse:
+
+| Estrategia | Implementación |
+|---|---|
+| **Partial failure** | `DashboardHome` usa `Promise.allSettled()` — si un endpoint falla, el resto de la UI sigue funcionando |
+| **Guard de ciclo de vida** | `mountedRef` pattern evita `setState` en componentes desmontados (cancelación de efectos) |
+| **Normalización defensiva** | `normalizeSensorEntry()`, `normalizeImageAnalysis()`, `normalizeActuatorEvent()` retornan `null` ante datos inválidos, nunca lanzan excepción |
+| **Fallback arrays** | Todo `fetch` castea `data` con `Array.isArray(data) ? data : []` para evitar `.map()` sobre `undefined` |
+| **Try/catch universal** | Cada llamada API está envuelta en `try/catch` con mensaje de error informativo al usuario |
+| **Empty states** | Cada módulo tiene estado vacío explícito ("Sin lecturas", "Sin historial", etc.) en lugar de pantallas en blanco |
+
+---
+
+## UX Industrial
+
+| Característica | Detalle |
+|---|---|
+| **Gráficas independientes por escala** | Cada sensor (temperatura, humedad suelo, humedad relativa, iluminación) tiene su propio gráfico con eje Y con dominio calculado dinámicamente (`niceDomain`). Las variaciones en una escala no opacan movimientos en otra. |
+| **Feedback real de actuadores** | El módulo `Control` muestra indicadores visuales de resultado tras ejecutar un comando ON/OFF: `CheckCircle2` (verde) para éxito, `XCircle` (rojo) para error, con mensaje del backend. |
+| **Indicador online/offline** | Barra de info del dispositivo en Monitoreo IoT con `Wifi`/`WifiOff`, badge de color verde/rojo, y timestamp de última lectura. |
+| **Refresh silencioso** | Polling a 15s con animación de ping pulsante + "Actualizando…" sin interrumpir la interacción del usuario. |
+| **Sidebar colapsable** | Barra lateral con modo compacto (iconos solamente) para maximizar espacio en pantalla, con persistencia de estado. |
+| **Modo automático con advertencia** | La página de Config muestra una advertencia visual explícita al activar el modo automático del invernadero. |
 
 ---
 
@@ -107,36 +194,60 @@ Si un dispositivo MQTT envía una variable no contemplada, el backend la almacen
 
 ```
 src/
-├── api/                        # Cliente Axios con interceptores JWT
-│   ├── api.js                  # Instancia axios, interceptores, normalizeError
-│   └── authService.js          # login, register, logout, persistAuthSession
-├── lib/                        # 7 módulos API (uno por dominio backend)
-│   ├── actuatorApi.js          # Actuators CRUD + execute + events
-│   ├── configApi.js            # Configuración del invernadero
-│   ├── deviceApi.js            # Catálogo de dispositivos
-│   ├── eventoApi.js            # Eventos de actuadores (fuente de alertas)
-│   ├── inventoryApi.js         # Inventario de insumos
-│   ├── predictionApi.js        # Predicciones y análisis IA
-│   └── sensorApi.js            # Lecturas de sensores + normalización
-├── modules/                    # Módulos funcionales
-│   ├── auth/pages/             # Login, Register
-│   ├── monitoreo/              # MonitoreoIoT, SensorCard, SensorHistoryChart
-│   ├── devices/pages/          # DeviceList
-│   ├── devices/components/     # DeviceCard
-│   ├── control/                # Control (CRUD + ejecución + historial)
-│   ├── predicciones/           # PrediccionesIA, AnalysisCard
-│   ├── alertas/                # Alertas (eventos de actuadores)
-│   ├── inventory/pages/        # InventoryList
-│   ├── config/                 # Configuración del invernadero
-│   ├── layout/components/      # Sidebar, DashboardLayout, MobileNavbar
-│   └── error/                  # NotFound (página 404)
-├── components/                 # UI Kit atómico
-│   └── ui/                     # Button, Input, Modal
+├── api/                            # Cliente Axios con interceptores JWT
+│   ├── api.js                      # Instancia axios, interceptores, normalizeError
+│   └── authService.js              # login, register, logout, persistAuthSession
+├── lib/                            # 8 módulos API (uno por dominio backend)
+│   ├── sensorApi.js                # Lecturas de sensores + normalización KEY_ALIASES
+│   ├── deviceApi.js                # Catálogo de dispositivos
+│   ├── actuatorApi.js              # Actuadores CRUD + execute + events
+│   ├── actuatorEventsApi.js        # Eventos de actuadores con normalización
+│   ├── predictionApi.js            # Predicciones y análisis IA (imagen)
+│   ├── inventoryApi.js             # Inventario de insumos
+│   ├── configApi.js                # Configuración del invernadero
+│   └── eventoApi.js                # Eventos (fuente de alertas)
+├── modules/                        # Módulos funcionales del dashboard
+│   ├── auth/pages/                 # Login, Register
+│   ├── dashboard/                  # DashboardHome + TemperatureTrendChart
+│   ├── monitoreo/                  # MonitoreoIoT + SensorCard + SensorHistoryChart
+│   ├── ia/                         # ResultadosIA + PredictionInsightsPanel
+│   ├── predicciones/               # PrediccionesIA + AnalysisCard
+│   ├── devices/                    # DeviceList + DeviceCard
+│   ├── control/                    # Control (CRUD + ejecución + historial)
+│   ├── alertas/                    # Alertas (eventos con severidad mapeada)
+│   ├── inventory/                  # InventoryList
+│   ├── config/                     # Configuración del invernadero
+│   ├── layout/                     # DashboardLayout + Sidebar + MobileNavbar
+│   └── error/                      # NotFound (página 404)
+├── components/                     # UI Kit atómico y guards
+│   ├── ui/                         # Button, Input, Modal
+│   ├── GuestRoute.jsx              # Redirige a /monitoreo si hay sesión activa
+│   └── ProtectedRoute.jsx          # Redirige a /login si no hay token
 ├── routes/
-│   └── AppRouter.jsx           # Definición de todas las rutas
-├── App.jsx                     # Punto de entrada de la aplicación
-└── main.jsx                    # Mount point de React
+│   └── AppRouter.jsx               # Definición de todas las rutas
+├── App.jsx                         # Punto de entrada de la aplicación
+└── main.jsx                        # Mount point de React
 ```
+
+---
+
+## Sincronización Backend-Frontend
+
+Cada archivo en `src/lib/` se corresponde 1:1 con un controlador Java del backend:
+
+| Archivo frontend | Controller Java | Endpoint base |
+|---|---|---|
+| `sensorApi.js` | `SensorController` | `/api/sensors` |
+| `deviceApi.js` | `DeviceController` | `/api/devices` |
+| `actuatorApi.js` | `ActuatorController` | `/api/actuators` |
+| `actuatorEventsApi.js` | `ActuatorEventController` | `/api/actuator-events` |
+| `predictionApi.js` | `PredictionController` | `/api/predictions` |
+| `inventoryApi.js` | `InventoryController` | `/api/inventory` |
+| `configApi.js` | `GreenhouseConfigController` | `/api/config` |
+| `eventoApi.js` | `ActuatorEventController` | `/api/actuator-events` |
+| `authService.js` | `AuthController` | `/auth` |
+
+Los tipos JSDoc (`@typedef`) replican exactamente los campos de los DTOs Java (`@JsonProperty`), asegurando que cualquier cambio en el backend se refleje como error de tipo en el frontend durante el desarrollo.
 
 ---
 
@@ -174,25 +285,6 @@ echo "VITE_API_URL=https://smart-greenhouse-backend-ec00.onrender.com" > .env
 
 ---
 
-## Sincronización Backend-Frontend
-
-Cada archivo en `src/lib/` se corresponde 1:1 con un controlador Java del backend:
-
-| Archivo frontend | Controller Java | Endpoint base |
-|---|---|---|
-| `sensorApi.js` | `SensorController.java` | `/api/sensors` |
-| `deviceApi.js` | `DeviceController.java` | `/api/devices` |
-| `actuatorApi.js` | `ActuatorController.java` + `ActuatorEventController.java` | `/api/actuators` |
-| `predictionApi.js` | `PredictionController.java` | `/api/predictions` |
-| `inventoryApi.js` | `InventoryController.java` | `/api/inventory` |
-| `configApi.js` | `GreenhouseConfigController.java` | `/api/config` |
-| `eventoApi.js` | `ActuatorEventController.java` | `/api/actuator-events` |
-| `authService.js` | `AuthController.java` | `/auth` |
-
-Los tipos JSDoc (`@typedef`) replican exactamente los campos de los DTOs Java (`@JsonProperty`), asegurando que cualquier cambio en el backend se refleje como error de tipo en el frontend durante el desarrollo.
-
----
-
 ## Documentación Adicional
 
 - **`FRONTEND_MASTER_PLAN.md`**: Contrato oficial de datos por módulo, especificación de endpoints, estructura de errores y estrategia de migración.
@@ -201,5 +293,5 @@ Los tipos JSDoc (`@typedef`) replican exactamente los campos de los DTOs Java (`
 
 <p align="center">
   <b>SmartGreenHouse — Frontend</b><br/>
-  <sub>Panel operativo para invernaderos inteligentes con React y Java Spring Boot</sub>
+  <sub>Panel operativo para invernaderos inteligentes con React 19 y Java Spring Boot</sub>
 </p>
