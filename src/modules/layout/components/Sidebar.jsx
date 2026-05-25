@@ -65,7 +65,6 @@ const SidebarContent = ({ collapsed = false, onNavigate, onToggleCollapse, isMob
         {!collapsed && (
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-white">SmartGreenHouse</p>
-            <p className="truncate text-xs text-farm-green-light/80">M08 Layout</p>
           </div>
         )}
 

@@ -356,7 +356,7 @@ const Control = () => {
                         </span>
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-gray-800 truncate">{actuator.nombre || actuator.actuador}</p>
-                          <p className="text-xs text-gray-400 font-mono truncate">
+                          <p className="text-xs text-gray-500 font-mono truncate">
                             {actuator.actuador}
                             {actuator.device_id ? ` · ${actuator.device_id}` : ""}
                           </p>

@@ -7,7 +7,7 @@ import { getStoredAccessToken } from "../api/api.js";
 const GuestRoute = () => {
   const token = getStoredAccessToken();
   if (token) {
-    return <Navigate to="/inventory" replace />;
+    return <Navigate to="/monitoreo" replace />;
   }
   return <Outlet />;
 };

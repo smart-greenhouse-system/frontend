@@ -32,7 +32,7 @@ const Login = () => {
         password: formData.password,
       });
       persistAuthSession(data);
-      navigate("/inventory", { replace: true });
+      navigate("/monitoreo", { replace: true });
     } catch (err) {
       const message =
         err?.message ??

@@ -63,10 +63,18 @@ const MonitoreoIoT = () => {
         if (!cancelled && mountedRef.current) {
           setDevices(Array.isArray(devData) ? devData : []);
           setActuators(Array.isArray(actData) ? actData : []);
+          if (!urlDeviceId && Array.isArray(devData) && devData.length > 0) {
+            const firstId = devData[0]?.device_id;
+            if (firstId) {
+              setSelectedDeviceId(firstId);
+              setSearchParams({ deviceId: firstId }, { replace: true });
+            }
+          }
         }
       } catch { /* non-critical */ }
     })();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── fetch sensor readings ──

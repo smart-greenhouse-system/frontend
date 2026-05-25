@@ -46,14 +46,15 @@ const InventoryList = () => {
   }, [loadInventory]);
 
   const isLowStock = useCallback(
-    (item) => item.threshold_minimo != null && item.cantidad < item.threshold_minimo,
+    (item) => item.threshold_minimo != null && item.cantidad <= item.threshold_minimo,
     []
   );
 
   const filteredInventory = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return inventory;
-    return inventory.filter(
+    const valid = inventory.filter((item) => item.nombre?.trim());
+    if (!term) return valid;
+    return valid.filter(
       (item) =>
         item.nombre.toLowerCase().includes(term) ||
         item.unidad.toLowerCase().includes(term)
@@ -166,24 +167,26 @@ const InventoryList = () => {
             mínimo configurado.
           </p>
           {lowStockCount > 0 ? (
-            <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900 ring-1 ring-amber-200">
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1 text-xs font-medium text-red-800 ring-1 ring-red-200">
               <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
               {lowStockCount} ítem
               {lowStockCount === 1 ? "" : "s"} con stock bajo
             </p>
           ) : null}
         </div>
-        <Button
-          type="button"
-          className="flex w-auto items-center gap-2 rounded-xl px-5 py-2.5"
-          onClick={openCreateModal}
-        >
-          <Plus className="h-4 w-4" />
-          <span>Agregar ítem</span>
-        </Button>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs"
+            onClick={openCreateModal}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Agregar ítem</span>
+          </Button>
+        </div>
       </header>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-gray-200 bg-white px-4 py-2 shadow-sm">
         <div className="max-w-xl">
           <Input
             id="inventory-search"
@@ -253,7 +256,7 @@ const InventoryList = () => {
                       key={item.id}
                       className={[
                         "block rounded-xl border p-3 shadow-sm md:table-row md:rounded-none md:border-0 md:p-0 md:shadow-none md:hover:bg-gray-50",
-                        low ? "border-amber-300 bg-amber-50/50" : "border-gray-200",
+                        low ? "border-red-300 bg-red-50/50" : "border-gray-200",
                       ].join(" ")}
                     >
                       <td className="grid grid-cols-2 items-center gap-2 py-2 text-sm md:table-cell md:px-6 md:py-4">
@@ -262,21 +265,21 @@ const InventoryList = () => {
                         </span>
                         <span className="text-right font-medium text-gray-800 md:text-left">
                           {item.nombre}
-                          {low ? (
-                            <span className="ml-2 inline-flex rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-900">
-                              Bajo
+                            {low ? (
+                            <span className="ml-2 inline-flex rounded-full bg-red-200 px-2 py-0.5 text-[10px] font-bold uppercase text-red-800">
+                              Stock Bajo
                             </span>
                           ) : null}
                         </span>
                       </td>
-                      <td className="grid grid-cols-2 items-center gap-2 py-2 text-sm md:table-cell md:px-6 md:py-4 md:text-gray-700">
+                      <td className={`grid grid-cols-2 items-center gap-2 py-2 text-sm md:table-cell md:px-6 md:py-4 md:text-gray-700 ${low ? "bg-red-50" : ""}`}>
                         <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 md:hidden">
                           Cantidad
                         </span>
                         <span
                           className={[
                             "text-right tabular-nums md:text-left",
-                            low ? "font-semibold text-amber-800" : "",
+                            low ? "font-bold text-red-600" : "",
                           ].join(" ")}
                         >
                           {item.cantidad}
