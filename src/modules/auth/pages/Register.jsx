@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { UserPlus } from "lucide-react";
 import { register as registerRequest } from "../../../api/authService.js";
 import Button from "../../../components/ui/Button";
 import Input from "../../../components/ui/Input";
@@ -59,7 +60,7 @@ const Register = () => {
             <img
               src="/assets/iconoGreenHouse.jpg"
               alt=""
-              className="h-14 w-14 rounded-xl object-cover ring-2 ring-white/25"
+              className="h-14 w-14 rounded-xl bg-transparent object-cover shadow-sm"
               width={56}
               height={56}
             />
@@ -67,13 +68,13 @@ const Register = () => {
               <p className="text-sm font-medium text-farm-green-light/90">GreenHouse</p>
               <h1 className="text-3xl font-semibold">Crear cuenta</h1>
               <p className="mt-1 text-sm text-farm-green-light/90">
-                Registro con correo y contraseña (POST /auth/register).
+                Crea tu cuenta para empezar a gestionar tu invernadero inteligente.
               </p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 px-8 py-8">
+        <form onSubmit={handleSubmit} className="space-y-5 px-8 pt-8 pb-10">
           <Input
             id="email"
             name="email"
@@ -119,8 +120,22 @@ const Register = () => {
               {submitError}
             </div>
           ) : null}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Registrando…" : "Registrarse"}
+
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
+          >
+            <span className="flex items-center justify-center gap-2">
+              {isSubmitting ? (
+                "Registrando…"
+              ) : (
+                <>
+                  <UserPlus size={18} />
+                  Registrarse
+                </>
+              )}
+            </span>
           </Button>
 
           <p className="text-center text-sm text-gray-700">
