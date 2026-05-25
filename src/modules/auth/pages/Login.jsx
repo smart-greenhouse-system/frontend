@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
 import {
   login as loginRequest,
   persistAuthSession,
@@ -52,7 +53,7 @@ const Login = () => {
             <img
               src="/assets/iconoGreenHouse.jpg"
               alt=""
-              className="h-14 w-14 rounded-xl object-cover ring-2 ring-white/25"
+              className="h-14 w-14 rounded-xl bg-transparent object-cover shadow-sm"
               width={56}
               height={56}
             />
@@ -66,7 +67,7 @@ const Login = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 px-8 py-8">
+        <form onSubmit={handleSubmit} className="space-y-5 px-8 pt-8 pb-10">
           {submitError ? (
             <div
               className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
@@ -99,16 +100,26 @@ const Login = () => {
             required
           />
 
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Ingresando…" : "Ingresar"}
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
+          >
+            <span className="flex items-center justify-center gap-2">
+              {isSubmitting ? (
+                "Ingresando…"
+              ) : (
+                <>
+                  <LogIn size={18} />
+                  Ingresar
+                </>
+              )}
+            </span>
           </Button>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-            <Link to="/forgot-password" className="text-farm-green hover:underline">
-              ¿Olvidaste tu contraseña?
-            </Link>
-            <Link to="/register" className="text-farm-green hover:underline">
-              Regístrate
+          <div className="pt-2 text-center text-sm">
+            <Link to="/register" className="font-medium text-farm-green hover:underline">
+              ¿No tienes cuenta? Regístrate
             </Link>
           </div>
         </form>

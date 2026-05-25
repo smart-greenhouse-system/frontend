@@ -98,7 +98,7 @@ Si un dispositivo MQTT envía una variable no contemplada, el backend la almacen
 | Inventario | `/inventory` | CRUD de insumos con buscador, indicador de stock bajo, umbral mínimo configurable | `GET /api/inventory`, `POST /api/inventory`, `PATCH /api/inventory/{id}` |
 | Configuración | `/config` | Nombre del invernadero, modo automático (con advertencia visual), frecuencia de análisis IA | `GET /api/config`, `PATCH /api/config` |
 
-**Rutas públicas**: `/login`, `/register`, `/forgot-password`, `/reset-password`.  
+**Rutas públicas**: `/login`, `/register`.  
 **Ruta catch-all**: `*` → página 404 personalizada con enlace de retorno al dashboard.
 
 ---
@@ -119,7 +119,7 @@ src/
 │   ├── predictionApi.js        # Predicciones y análisis IA
 │   └── sensorApi.js            # Lecturas de sensores + normalización
 ├── modules/                    # Módulos funcionales
-│   ├── auth/pages/             # Login, Register, ForgotPassword, ResetPassword
+│   ├── auth/pages/             # Login, Register
 │   ├── monitoreo/              # MonitoreoIoT, SensorCard, SensorHistoryChart
 │   ├── devices/pages/          # DeviceList
 │   ├── devices/components/     # DeviceCard

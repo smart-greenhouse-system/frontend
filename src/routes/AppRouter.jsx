@@ -3,8 +3,7 @@ import GuestRoute from "../components/GuestRoute";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Login from "../modules/auth/pages/Login";
 import Register from "../modules/auth/pages/Register";
-import ForgotPassword from "../modules/auth/pages/ForgotPassword";
-import ResetPassword from "../modules/auth/pages/ResetPassword";
+
 import DashboardHome from "../modules/dashboard/DashboardHome";
 import InventoryList from "../modules/inventory/pages/InventoryList";
 import DashboardLayout from "../modules/layout/DashboardLayout";
@@ -27,8 +26,6 @@ const AppRouter = () => {
           <Route path="/register" element={<Register />} />
         </Route>
 
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Rutas privadas: exigen token; luego layout del dashboard */}
         <Route element={<ProtectedRoute />}>
