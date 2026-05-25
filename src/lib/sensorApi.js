@@ -1,6 +1,6 @@
 import api from "../api/api.js";
 
-const KEY_ALIASES = {
+export const KEY_ALIASES = {
   temperatura: ["temperatura", "temperature", "temp"],
   humedad_relativa: ["humedad_relativa", "humedad", "humedad_aire", "hr", "humidity"],
   humedad_suelo: ["humedad_suelo", "soil_moisture", "humidity_soil", "hum_suelo", "moisture"],
@@ -24,6 +24,7 @@ function normalizeSensorEntry(entry) {
     humedad_relativa: sensores[findFirstKey(sensores, KEY_ALIASES.humedad_relativa)] ?? null,
     humedad_suelo: sensores[findFirstKey(sensores, KEY_ALIASES.humedad_suelo)] ?? null,
     iluminacion: sensores[findFirstKey(sensores, KEY_ALIASES.iluminacion)] ?? null,
+    sensores: entry.sensores ?? {},
     timestamp: entry.created_at ?? entry.createdAt ?? null,
   };
 }

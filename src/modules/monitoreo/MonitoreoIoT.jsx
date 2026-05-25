@@ -3,21 +3,14 @@ import { useSearchParams } from "react-router-dom";
 import {
   Activity, Clock, Cpu, RefreshCw, Server, Wifi, WifiOff, Gauge,
 } from "lucide-react";
-import { getLatestReadings } from "../../lib/sensorApi";
+import { getLatestReadings, KEY_ALIASES } from "../../lib/sensorApi";
 import { getDevices } from "../../lib/deviceApi";
 import { getActuators } from "../../lib/actuatorApi";
 import SensorCard from "./components/SensorCard";
 import SensorHistoryChart from "./components/SensorHistoryChart";
 
-const SENSOR_KEYS = ["temperatura", "humedad_suelo", "humedad_relativa", "iluminacion"];
+const KNOWN_SENSOR_KEYS = ["temperatura", "humedad_suelo", "humedad_relativa", "iluminacion"];
 const AUTO_REFRESH_MS = 15_000;
-
-const TWO_MIN_MS = 2 * 60 * 1000;
-
-function isOnline(lastSeen) {
-  if (!lastSeen) return false;
-  return Date.now() - new Date(lastSeen).getTime() < TWO_MIN_MS;
-}
 
 /**
  * MonitoreoIoT — Persona B / Módulo 08 Sensores (FRONTEND_MASTER_PLAN.md)
@@ -135,7 +128,7 @@ const MonitoreoIoT = () => {
     [actuators, selectedDeviceId]
   );
 
-  const online = isOnline(selectedDevice?.last_seen);
+  const online = selectedDevice?.estado === "ONLINE";
 
   const formattedTimestamp = currentReading?.timestamp
     ? new Date(currentReading.timestamp).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "medium" })
@@ -149,6 +142,16 @@ const MonitoreoIoT = () => {
     if (!readings) return [];
     return readings.map((r) => r.device_id);
   }, [readings]);
+
+  // ── dynamic sensor keys (known + unknown from raw sensores) ──
+  const sensorKeys = useMemo(() => {
+    if (!currentReading?.sensores) return KNOWN_SENSOR_KEYS;
+    const knownAliases = new Set(Object.values(KEY_ALIASES).flat());
+    const extra = Object.keys(currentReading.sensores).filter(
+      (k) => !knownAliases.has(k)
+    );
+    return [...KNOWN_SENSOR_KEYS, ...extra];
+  }, [currentReading]);
 
   // ── handle device switch ──
   const handleDeviceSelect = (id) => {
@@ -290,8 +293,12 @@ const MonitoreoIoT = () => {
           {/* SENSOR CARDS */}
           {selectedDeviceId && currentReading && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {SENSOR_KEYS.map((key) => (
-                <SensorCard key={key} sensorKey={key} value={currentReading[key]} />
+              {sensorKeys.map((key) => (
+                <SensorCard
+                  key={key}
+                  sensorKey={key}
+                  value={currentReading[key] ?? currentReading.sensores?.[key]}
+                />
               ))}
             </div>
           )}

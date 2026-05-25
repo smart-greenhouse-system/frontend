@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { BarChart3, Loader2 } from "lucide-react";
-import { getSensorHistory } from "../../../lib/sensorApi";
+import { Activity, BarChart3, Loader2 } from "lucide-react";
+import { getSensorHistory, KEY_ALIASES } from "../../../lib/sensorApi";
+
+const KNOWN_SENSOR_KEYS = ["temperatura", "humedad_suelo", "humedad_relativa", "iluminacion"];
 
 const CHARTS = [
   {
@@ -12,30 +14,44 @@ const CHARTS = [
     label: "Tendencia de Temperatura",
     unit: "°C",
     color: "#ef4444",
-    yDomain: [0, 50],
+    step: 5,
   },
   {
     key: "humedad_suelo",
     label: "Tendencia de Humedad del Suelo",
     unit: "%",
     color: "#06b6d4",
-    yDomain: [0, 100],
+    step: 10,
   },
   {
     key: "humedad_relativa",
     label: "Tendencia de Humedad Relativa",
     unit: "%",
     color: "#14b8a6",
-    yDomain: [0, 100],
+    step: 10,
   },
   {
     key: "iluminacion",
     label: "Tendencia de Iluminación",
     unit: "lux",
     color: "#f59e0b",
-    yDomain: "auto",
+    step: 500,
   },
 ];
+
+function niceDomain(values, step) {
+  if (!values || values.length === 0) return [0, step || 10];
+  const clean = values.filter((v) => typeof v === "number" && !Number.isNaN(v));
+  if (clean.length === 0) return [0, step || 10];
+  const min = Math.min(...clean);
+  const max = Math.max(...clean);
+  const s = step || 10;
+  if (Math.abs(max - min) < 0.001) {
+    const pad = s;
+    return [Math.max(0, min - pad), max + pad];
+  }
+  return [Math.floor(min / s) * s, Math.ceil(max / s) * s];
+}
 
 function formatTick(iso) {
   if (!iso) return "";
@@ -92,6 +108,64 @@ export default function SensorHistoryChart({ deviceId }) {
     fetchHistory();
   }, [fetchHistory]);
 
+  const flattenedHistory = useMemo(() => {
+    return history.map((row) => {
+      const flat = { ...row };
+      if (row.sensores) {
+        Object.entries(row.sensores).forEach(([k, v]) => {
+          flat[`raw_${k}`] = v;
+        });
+      }
+      return flat;
+    });
+  }, [history]);
+
+  const unknownChartKeys = useMemo(() => {
+    if (!history.length) return [];
+    const knownAliases = new Set(Object.values(KEY_ALIASES).flat());
+    const candidates = new Set();
+    history.forEach((row) => {
+      if (row.sensores) {
+        Object.keys(row.sensores).forEach((k) => {
+          if (!knownAliases.has(k)) candidates.add(k);
+        });
+      }
+    });
+    return Array.from(candidates).filter((k) => {
+      const count = history.filter((r) => r.sensores?.[k] != null).length;
+      return count >= 2;
+    });
+  }, [history]);
+
+  const extraCharts = useMemo(() => {
+    return unknownChartKeys.map((k) => {
+      const values = history.map((r) => r.sensores?.[k]).filter((v) => v != null);
+      const [min, max] = niceDomain(values, 10);
+      return {
+        key: `raw_${k}`,
+        label: k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        unit: "",
+        color: "#9ca3af",
+        domain: [min, max],
+        step: 10,
+      };
+    });
+  }, [unknownChartKeys, history]);
+
+  const allCharts = useMemo(() => {
+    return [...CHARTS, ...extraCharts];
+  }, [extraCharts]);
+
+  const domains = useMemo(() => {
+    const result = {};
+    allCharts.forEach(({ key, step }) => {
+      const dataKey = key.startsWith("raw_") ? key : key;
+      const values = flattenedHistory.map((r) => r[dataKey]);
+      result[key] = niceDomain(values, step);
+    });
+    return result;
+  }, [allCharts, flattenedHistory]);
+
   if (!deviceId) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white/60 py-16 text-center">
@@ -142,14 +216,14 @@ export default function SensorHistoryChart({ deviceId }) {
       </h3>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {CHARTS.map(({ key, label, unit, color, yDomain }) => (
+        {allCharts.map(({ key, label, unit, color }) => (
           <div key={key} className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-sm backdrop-blur-sm sm:p-5">
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-600">
               {label}
             </h4>
             <div className="h-56 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={history} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <LineChart data={flattenedHistory} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
                     dataKey="timestamp"
@@ -158,7 +232,7 @@ export default function SensorHistoryChart({ deviceId }) {
                     axisLine={{ stroke: "#e5e7eb" }}
                   />
                   <YAxis
-                    domain={yDomain === "auto" ? undefined : yDomain}
+                    domain={domains[key]}
                     tick={{ fontSize: 11, fill: "#9ca3af" }}
                     axisLine={{ stroke: "#e5e7eb" }}
                   />
