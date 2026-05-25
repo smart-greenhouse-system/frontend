@@ -137,11 +137,6 @@ const MonitoreoIoT = () => {
     ? lastUpdated.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
     : null;
 
-  const allDeviceIds = useMemo(() => {
-    if (!readings) return [];
-    return readings.map((r) => r.device_id);
-  }, [readings]);
-
   // ── dynamic sensor keys — SOLO los que existen en el payload ──
   const sensorKeys = useMemo(() => {
     if (!currentReading?.sensores) return [];
@@ -202,6 +197,39 @@ const MonitoreoIoT = () => {
         </div>
       </div>
 
+      {/* NODE SELECTOR — pills with connection indicator */}
+      {devices.length > 0 && (
+        <div className="overflow-x-auto -mx-4 px-4 pb-1 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-2 min-w-max sm:flex-wrap">
+            <span className="hidden sm:inline text-[11px] font-semibold uppercase tracking-wider text-gray-400 mr-1">
+              Nodos
+            </span>
+            {devices.map((dev) => {
+              const isActive = dev.device_id === selectedDeviceId;
+              const isOnline = dev.estado === "ONLINE";
+              return (
+                <button
+                  key={dev.device_id}
+                  onClick={() => handleDeviceSelect(dev.device_id)}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                    isActive
+                      ? "bg-farm-green-dark text-white shadow-sm ring-1 ring-farm-green-dark/30"
+                      : "bg-white/80 text-gray-600 ring-1 ring-gray-200 hover:bg-gray-100 hover:shadow-sm"
+                  }`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      isOnline ? "bg-green-500" : "bg-red-400"
+                    } ${isActive ? "ring-1 ring-white/40" : ""}`}
+                  />
+                  {dev.nombre || dev.device_id}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800" role="alert">
           <p className="font-semibold">Error al obtener datos</p>
@@ -229,29 +257,6 @@ const MonitoreoIoT = () => {
       {/* DATA */}
       {readings && readings.length > 0 && (
         <>
-          {/* DEVICE SELECTOR — from readings with cross-ref to device catalog */}
-          <div className="flex flex-wrap items-center gap-2">
-            {allDeviceIds.map((id) => {
-              const isActive = id === selectedDeviceId;
-              const dev = devices.find((d) => d.device_id === id);
-              return (
-                <button
-                  key={id}
-                  onClick={() => handleDeviceSelect(id)}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                    isActive
-                      ? "bg-farm-green-dark text-white shadow-md"
-                      : "bg-white/80 text-gray-600 ring-1 ring-gray-200 hover:bg-white hover:shadow-sm"
-                  }`}
-                >
-                  <Server className="h-4 w-4" strokeWidth={1.75} />
-                  {dev?.nombre || id}
-                  <span className={`h-2 w-2 rounded-full ${isActive ? "bg-green-400" : "bg-gray-300"}`} />
-                </button>
-              );
-            })}
-          </div>
-
           {/* NODE INFO BAR — real data from /api/devices */}
           {selectedDevice && (
             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-farm-green/15 bg-white/60 px-4 py-3 backdrop-blur-sm sm:px-6">
