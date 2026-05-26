@@ -72,6 +72,7 @@ const Control = () => {
       setForm(EMPTY_FORM);
     } else if (kind === "edit" && actuator) {
       setForm({
+        actuator_id: actuator.actuator_id || "",
         device_id: actuator.device_id || "",
         actuador: actuator.actuador || "riego",
         nombre: actuator.nombre || "",
@@ -137,6 +138,7 @@ const Control = () => {
       if (mountedRef.current) {
         setActuators((prev) => [...prev, created]);
         closeModal();
+        setFeedback({ _toast: { type: "success", message: "Actuador creado correctamente (Registro administrativo)" } });
       }
     } catch (err) {
       setFormError(err?.response?.data?.message || err.message || "Error al crear actuador");
@@ -154,6 +156,7 @@ const Control = () => {
       if (mountedRef.current) {
         setActuators((prev) => prev.map((a) => a.actuator_id === modal.actuator.actuator_id ? updated : a));
         closeModal();
+        setFeedback({ _toast: { type: "success", message: "Actuador actualizado exitosamente" } });
       }
     } catch (err) {
       setFormError(err?.response?.data?.message || err.message || "Error al actualizar actuador");
@@ -171,6 +174,7 @@ const Control = () => {
       if (mountedRef.current) {
         setActuators((prev) => prev.filter((a) => a.actuator_id !== modal.actuator.actuator_id));
         closeModal();
+        setFeedback({ _toast: { type: "success", message: "Actuador eliminado del sistema" } });
       }
     } catch (err) {
       setFormError(err?.response?.data?.message || err.message || "Error al eliminar actuador");
@@ -261,6 +265,20 @@ const Control = () => {
           </button>
         </div>
       </div>
+
+      {/* ── TOAST GLOBAL ── */}
+      {feedback._toast && (
+        <div
+          className={`rounded-xl border px-5 py-3 text-sm font-semibold ${
+            feedback._toast.type === "success"
+              ? "border-green-200 bg-green-50 text-green-800"
+              : "border-red-200 bg-red-50 text-red-800"
+          }`}
+          role="alert"
+        >
+          {feedback._toast.message}
+        </div>
+      )}
 
       {/* ── Device selector + tabs ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -530,6 +548,16 @@ const Control = () => {
                 onChange={(e) => setForm((f) => ({ ...f, actuator_id: e.target.value }))}
                 placeholder="Ej: VEN3468"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-farm-green-dark focus:outline-none focus:ring-2 focus:ring-farm-green-dark/20"
+              />
+            </div>
+          )}
+          {modal.kind === "edit" && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600">actuator_id</label>
+              <input
+                value={form.actuator_id}
+                disabled
+                className="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-500"
               />
             </div>
           )}
