@@ -191,6 +191,16 @@ const MonitoreoIoT = () => {
     return null;
   }, [currentReading, historyData]);
 
+  // ── historial fusionado: historyData + currentReading si no está duplicado ──
+  const mergedHistory = useMemo(() => {
+    if (!currentReading) return historyData;
+    const duplicate = historyData.some(
+      (h) => h.id && currentReading.id && h.id === currentReading.id
+    );
+    if (duplicate) return historyData;
+    return [...historyData, currentReading];
+  }, [historyData, currentReading]);
+
   // ── handle device switch ──
   const handleDeviceSelect = (id) => {
     setSelectedDeviceId(id);
@@ -406,7 +416,7 @@ const MonitoreoIoT = () => {
 
           {/* HISTORY CHART */}
           {selectedDeviceId && sensorKeys.length > 0 && (
-            <SensorHistoryChart deviceId={selectedDeviceId} sensorKeys={sensorKeys} historyData={historyData} />
+            <SensorHistoryChart deviceId={selectedDeviceId} sensorKeys={sensorKeys} historyData={mergedHistory} />
           )}
         </>
       )}
