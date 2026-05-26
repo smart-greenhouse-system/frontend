@@ -1,5 +1,12 @@
 import { Thermometer, Droplets, Wind, Sun, Activity } from "lucide-react";
 
+function smartLabel(rawKey) {
+  if (!rawKey) return "Sensor";
+  return rawKey
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 const FALLBACK_CONFIG = {
   label: "Sensor",
   unit: "",
@@ -57,6 +64,17 @@ const SENSOR_CONFIG = {
     min: 0,
     max: 5000,
   },
+  altura_agua: {
+    label: "Altura Agua",
+    unit: "cm",
+    Icon: Droplets,
+    gradient: "from-blue-600 to-blue-800",
+    bgGlow: "bg-blue-600/10",
+    iconBg: "bg-gradient-to-br from-blue-600 to-blue-800",
+    format: (v) => String(v),
+    min: 0,
+    max: 100,
+  },
 };
 
 function clamp(val, min, max) {
@@ -64,7 +82,11 @@ function clamp(val, min, max) {
 }
 
 export default function SensorCard({ sensorKey, value }) {
-  const cfg = SENSOR_CONFIG[sensorKey] ?? FALLBACK_CONFIG;
+  const baseCfg = SENSOR_CONFIG[sensorKey];
+  const cfg = baseCfg ?? {
+    ...FALLBACK_CONFIG,
+    label: smartLabel(sensorKey),
+  };
 
   const { label, unit, Icon, gradient, bgGlow, iconBg, format, min, max } = cfg;
   const display = format(value);

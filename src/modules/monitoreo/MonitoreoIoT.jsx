@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   Activity, Clock, Cpu, RefreshCw, Server, Wifi, WifiOff, Gauge,
 } from "lucide-react";
-import { getLatestReadings, KEY_ALIASES } from "../../lib/sensorApi";
+import { getLatestReadings, getSensorHistory, KEY_ALIASES } from "../../lib/sensorApi";
 import { getDevices } from "../../lib/deviceApi";
 import { getActuators } from "../../lib/actuatorApi";
 import SensorCard from "./components/SensorCard";
@@ -38,6 +38,10 @@ const MonitoreoIoT = () => {
   const [devices, setDevices] = useState([]);
   const [actuators, setActuators] = useState([]);
 
+  // --- history data per device ---
+  const [historyData, setHistoryData] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   // --- selected device ---
   const [selectedDeviceId, setSelectedDeviceId] = useState(urlDeviceId);
 
@@ -55,6 +59,7 @@ const MonitoreoIoT = () => {
         if (!cancelled && mountedRef.current) {
           setDevices(Array.isArray(devData) ? devData : []);
           setActuators(Array.isArray(actData) ? actData : []);
+          console.log("🔍 [AUDIT] /api/devices raw:", devData);
           if (!urlDeviceId && Array.isArray(devData) && devData.length > 0) {
             const firstId = devData[0]?.device_id;
             if (firstId) {
@@ -80,6 +85,7 @@ const MonitoreoIoT = () => {
 
     try {
       const normalized = await getLatestReadings();
+      console.log("🔍 [AUDIT] /api/sensors/latest raw:", normalized);
       if (!mountedRef.current) return;
 
       setReadings(normalized);
@@ -111,6 +117,30 @@ const MonitoreoIoT = () => {
     return () => clearInterval(id);
   }, [fetchLatest]);
 
+  // ── fetch history when selected device changes ──
+  useEffect(() => {
+    if (!selectedDeviceId) return;
+    let cancelled = false;
+    setHistoryLoading(true);
+    (async () => {
+      try {
+        const rows = await getSensorHistory(selectedDeviceId);
+        console.log("🔍 [AUDIT] /api/sensors/history/", selectedDeviceId, "→", rows);
+        if (!cancelled) {
+          setHistoryData(rows ?? []);
+          setHistoryLoading(false);
+        }
+      } catch (e) {
+        console.warn("⚠️ [AUDIT] Error en history para", selectedDeviceId, e);
+        if (!cancelled) {
+          setHistoryData([]);
+          setHistoryLoading(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; setHistoryData([]); };
+  }, [selectedDeviceId]);
+
   // ── derived ──
   const selectedDevice = useMemo(
     () => devices.find((d) => d.device_id === selectedDeviceId) ?? null,
@@ -137,20 +167,29 @@ const MonitoreoIoT = () => {
     ? lastUpdated.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
     : null;
 
-  // ── dynamic sensor keys — SOLO los que existen en el payload ──
+  // ── dynamic sensor keys — desde currentReading o último historial ──
   const sensorKeys = useMemo(() => {
-    if (!currentReading?.sensores) return [];
+    const source = currentReading ?? (historyData.length > 0 ? historyData[historyData.length - 1] : null);
+    const sensores = source?.sensores;
+    if (!sensores || Object.keys(sensores).length === 0) return [];
     const reverseAlias = {};
     Object.entries(KEY_ALIASES).forEach(([norm, aliases]) => {
       aliases.forEach((a) => { reverseAlias[a] = norm; });
     });
     const keys = new Set();
-    Object.entries(currentReading.sensores).forEach(([rawKey, value]) => {
+    Object.entries(sensores).forEach(([rawKey, value]) => {
       if (typeof value !== "number" || Number.isNaN(value)) return;
       keys.add(reverseAlias[rawKey] || rawKey);
     });
     return Array.from(keys);
-  }, [currentReading]);
+  }, [currentReading, historyData]);
+
+  // ── valor a mostrar — currentReading, o último del historial ──
+  const displayReading = useMemo(() => {
+    if (currentReading) return currentReading;
+    if (historyData.length > 0) return historyData[historyData.length - 1];
+    return null;
+  }, [currentReading, historyData]);
 
   // ── handle device switch ──
   const handleDeviceSelect = (id) => {
@@ -271,8 +310,8 @@ const MonitoreoIoT = () => {
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
                   {selectedDevice.tipo && <span>{selectedDevice.tipo}</span>}
                   {selectedDevice.estado && <span>estado: {selectedDevice.estado}</span>}
-                  {currentReading && (
-                    <span>sensores: {Object.keys(currentReading.sensores ?? {}).length}</span>
+                  {displayReading && (
+                    <span>sensores: {Object.keys(displayReading.sensores ?? {}).length}</span>
                   )}
                   <span>actuadores: {deviceActuators.length}</span>
                   {formattedTimestamp && <span>última lectura: {formattedTimestamp}</span>}
@@ -300,7 +339,7 @@ const MonitoreoIoT = () => {
           )}
 
           {/* SENSOR CARDS */}
-          {selectedDeviceId && currentReading && sensorKeys.length > 0 && (
+          {selectedDeviceId && displayReading && sensorKeys.length > 0 && (
             <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2${
               sensorKeys.length <= 2 ? "" : sensorKeys.length === 3 ? " lg:grid-cols-3" : " lg:grid-cols-4"
             }`}>
@@ -308,14 +347,14 @@ const MonitoreoIoT = () => {
                 <SensorCard
                   key={key}
                   sensorKey={key}
-                  value={currentReading[key] ?? currentReading.sensores?.[key]}
+                  value={displayReading[key] ?? displayReading.sensores?.[key]}
                 />
               ))}
             </div>
           )}
 
           {/* NO READINGS FOR THIS DEVICE */}
-          {selectedDeviceId && !currentReading && readings.length > 0 && (
+          {selectedDeviceId && !displayReading && readings.length > 0 && !historyLoading && historyData.length === 0 && (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-16 text-center">
               <Activity className="mb-3 h-10 w-10 text-gray-300" strokeWidth={1.5} />
               <p className="text-sm font-medium text-gray-500">
@@ -367,7 +406,7 @@ const MonitoreoIoT = () => {
 
           {/* HISTORY CHART */}
           {selectedDeviceId && sensorKeys.length > 0 && (
-            <SensorHistoryChart deviceId={selectedDeviceId} sensorKeys={sensorKeys} />
+            <SensorHistoryChart deviceId={selectedDeviceId} sensorKeys={sensorKeys} historyData={historyData} />
           )}
         </>
       )}

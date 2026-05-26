@@ -5,6 +5,7 @@ export const KEY_ALIASES = {
   humedad_relativa: ["humedad_relativa", "humedad", "humedad_aire", "hr", "humidity"],
   humedad_suelo: ["humedad_suelo", "soil_moisture", "humidity_soil", "hum_suelo", "moisture"],
   iluminacion: ["iluminacion", "luz", "light", "illuminance", "lux"],
+  altura_agua: ["altura_agua", "nivel_agua", "water_level", "nivel_del_agua"],
 };
 
 function findFirstKey(map, aliases) {
@@ -24,6 +25,7 @@ function normalizeSensorEntry(entry) {
     humedad_relativa: sensores[findFirstKey(sensores, KEY_ALIASES.humedad_relativa)] ?? null,
     humedad_suelo: sensores[findFirstKey(sensores, KEY_ALIASES.humedad_suelo)] ?? null,
     iluminacion: sensores[findFirstKey(sensores, KEY_ALIASES.iluminacion)] ?? null,
+    altura_agua: sensores[findFirstKey(sensores, KEY_ALIASES.altura_agua)] ?? null,
     sensores: entry.sensores ?? {},
     timestamp: entry.created_at ?? entry.createdAt ?? null,
   };

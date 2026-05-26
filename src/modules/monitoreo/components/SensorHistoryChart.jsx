@@ -48,7 +48,7 @@ function ChartTooltip({ active, payload, label, unit }) {
   );
 }
 
-export default function SensorHistoryChart({ deviceId, sensorKeys }) {
+export default function SensorHistoryChart({ deviceId, sensorKeys, historyData }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -63,13 +63,15 @@ export default function SensorHistoryChart({ deviceId, sensorKeys }) {
     if (!deviceId) return;
     setLoading(true);
     setError(null);
+    setHistory([]);
     try {
       const rows = await getSensorHistory(deviceId);
+      console.log("📊 [DEBUG] Historial recibido para:", deviceId, rows);
       if (!mountedRef.current) return;
       const sorted = [...rows].sort(
         (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
       );
-      setHistory(sorted);
+      setHistory(sorted.slice(-30));
     } catch (err) {
       if (!mountedRef.current) return;
       setError(err?.message || "Error al cargar historial");
@@ -79,8 +81,17 @@ export default function SensorHistoryChart({ deviceId, sensorKeys }) {
   }, [deviceId]);
 
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    if (historyData && historyData.length > 0) {
+      const sorted = [...historyData].sort(
+        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+      );
+      setHistory(sorted.slice(-30));
+      setLoading(false);
+      setError(null);
+    } else {
+      fetchHistory();
+    }
+  }, [deviceId, historyData, fetchHistory]);
 
   const flattenedHistory = useMemo(() => {
     return history.map((row) => {
@@ -103,12 +114,12 @@ export default function SensorHistoryChart({ deviceId, sensorKeys }) {
       const def = CHART_DEFS[key];
       if (def) {
         const values = history.map((r) => r[key]).filter((v) => typeof v === "number" && !Number.isNaN(v));
-        if (values.length >= 2) {
+        if (values.length >= 1) {
           result.push({ key, ...def });
         }
       } else {
         const values = history.map((r) => r.sensores?.[key]).filter((v) => v != null);
-        if (values.length >= 2) {
+        if (values.length >= 1) {
           const [min, max] = niceDomain(values, 10);
           result.push({
             key: `raw_${key}`,
